@@ -1,5 +1,5 @@
 # lake-temperature-missouri-models
-GLM process model pipeline for 8 priority reservoirs in Missouri
+GLM process model pipeline for 8 priority reservoirs in Missouri. This pipeline was derived from [`lake-temperature-process-models`](https://github.com/USGS-R/lake-temperature-process-models) pipeline.
 
 -------------------
 ## Dependent files 
