@@ -37,3 +37,20 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# `lake-temperature-missouri-models` specific files to ignore
+## Targets files
+_targets
+
+## Ignore intermediate pipeline files
+*/in/*
+*/tmp/*
+*/out/*
+
+## Allow the nml template to be committed
+!1_prep/in/glm3_template.nml
+
+## Allow the `.empty` files to be committed
+!*/in/.empty
+!*/tmp/.empty
+!*/out/.empty
