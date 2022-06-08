@@ -75,11 +75,11 @@ run_glm3_model <- function(sim_dir, nml_obj, model_config, export_fl_template) {
   glmtools::write_nml(nml_obj, file.path(sim_lake_dir, 'glm3.nml'))
 
   # In prep for checking model if model successfully ran and extracting
-  #  output, define path to output netCDF file
+  #  output, define path to output netCDF file, create output directory
   out_dir <- glmtools::get_nml_value(nml_obj, arg_name = 'out_dir')
   out_fn <- paste0(glmtools::get_nml_value(nml_obj, 'out_fn'), '.nc')
   nc_filepath <- file.path(sim_lake_dir, out_dir, out_fn)
-  dir.create(nc_filepath, recursive=TRUE, showWarnings=FALSE)
+  dir.create(file.path(sim_lake_dir, out_dir), recursive=TRUE, showWarnings=FALSE)
 
   # for each model run, try running the model up to 5 times
   # if model run succeeds (returned code = 0 AND final output
