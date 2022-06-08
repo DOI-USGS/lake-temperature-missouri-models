@@ -1,7 +1,7 @@
 #' @title function to extract and write glm output following a model run
-#' @description Extract temperature, layers, evaporation, and ice data 
-#' from the model run and save to the export feather file. 
-#' Adapted from Jordan's GLM projection code: 
+#' @description Extract temperature, layers, evaporation, and ice data
+#' from the model run and save to the export feather file.
+#' Adapted from Jordan's GLM projection code:
 #' https://github.com/jread-usgs/lake-temperature-process-models/blob/master/3_run/src/run_glm_utils.R#L89-L101
 #' @param nc_filepath the path for the netCDF output file for the simulation
 #' @param nml_obj the complete nml object for the model run
@@ -10,7 +10,7 @@ extract_glm_output <- function(nc_filepath, nml_obj, export_fl) {
   lake_depth <- glmtools::get_nml_value(nml_obj, arg_name = 'lake_depth')
   export_depths <- seq(0, lake_depth, by = 0.5)
   temp_data <- glmtools::get_temp(nc_filepath, reference = 'surface', z_out = export_depths) %>%
-    mutate(time = as.Date(lubridate::floor_date(DateTime, 'days'))) %>% 
+    mutate(time = as.Date(lubridate::floor_date(DateTime, 'days'))) %>%
     select(-DateTime)
   layers_data <- glmtools::get_var(nc_filepath, 'NS') %>%
     rename(n_layers = NS) %>%
@@ -34,40 +34,40 @@ extract_glm_output <- function(nc_filepath, nml_obj, export_fl) {
 #' @description For each lake - driver - time period combo, write the nml
 #' file, the meteo data, and run the glm3 model. If the model run is
 #' successful, the results are extracted and saved to '2_run/tmp' using
-#' `extract_glm_ouput()` and then the simulation directory is deleted 
+#' `extract_glm_ouput()` and then the simulation directory is deleted
 #' @param sim_dir base directory for simulations
 #' @param nml_obj nml object for the current lake
-#' @param model_config a model configuration table with one 
-#' row per model run and columns for site_id, state, driver, time_period, 
-#' driver_start_date, driver_end_date, burn_in, burn_in_start, burn_out, 
+#' @param model_config a model configuration table with one
+#' row per model run and columns for site_id, state, driver, time_period,
+#' driver_start_date, driver_end_date, burn_in, burn_in_start, burn_out,
 #' burn_out_end, meteo_fl, and meteo_fl_hash
-#' @param export_fl_template the template for constructing the filepath 
+#' @param export_fl_template the template for constructing the filepath
 #' for the export feather file that will be saved in `extract_glm_ouput()`
-#' @return a tibble which includes the run_date, site_id, driver, time_period, 
-#' the name of the export feather file, its hash (NA if the model run failed), 
-#' the duration of the model run, whether or not the model run succeeded, 
-#' and the code returned by the call to GLM3r::run_glm(). 
+#' @return a tibble which includes the run_date, site_id, driver, time_period,
+#' the name of the export feather file, its hash (NA if the model run failed),
+#' the duration of the model run, whether or not the model run succeeded,
+#' and the code returned by the call to GLM3r::run_glm().
 run_glm3_model <- function(sim_dir, nml_obj, model_config, export_fl_template) {
   # pull parameters from model_config
   site_id <- model_config$site_id
   time_period <- model_config$time_period
   driver <- model_config$driver
   raw_meteo_fl <- model_config$meteo_fl
-  
+
   # prepare to write inputs and results locally for quick I/O
   sim_lake_dir <- file.path(sim_dir, sprintf('%s_%s_%s', site_id, driver, time_period))
   dir.create(sim_lake_dir, recursive=TRUE, showWarnings=FALSE)
-  
+
   # copy meteo data to sim_lake_dir
   sim_meteo_filename <- basename(raw_meteo_fl)
   file.copy(from = raw_meteo_fl, to = sim_lake_dir)
-  
+
   # Define simulation start and stop dates based on burn-in and burn-out periods
   sim_start <- as.character(model_config$burn_in_start)
   sim_stop <- as.character(model_config$burn_out_end)
-  
+
   # write nml file, specifying meteo file and start and stop dates:
-  nml_obj <- set_nml(nml_obj, arg_list = list(nsave = 24, 
+  nml_obj <- set_nml(nml_obj, arg_list = list(nsave = 24,
                                               meteo_fl = sim_meteo_filename,
                                               sim_name = sprintf('%s_%s_%s', site_id, driver, time_period),
                                               start = sim_start,
@@ -79,10 +79,11 @@ run_glm3_model <- function(sim_dir, nml_obj, model_config, export_fl_template) {
   out_dir <- glmtools::get_nml_value(nml_obj, arg_name = 'out_dir')
   out_fn <- paste0(glmtools::get_nml_value(nml_obj, 'out_fn'), '.nc')
   nc_filepath <- file.path(sim_lake_dir, out_dir, out_fn)
-  
+  dir.create(nc_filepath, recursive=TRUE, showWarnings=FALSE)
+
   # for each model run, try running the model up to 5 times
   # if model run succeeds (returned code = 0 AND final output
-  # date coincides with the end of the simulation period), 
+  # date coincides with the end of the simulation period),
   # extract output and save to feather export file, and
   # return tibble with export file name, its hash and run
   # diagnostics. If model run fails after 5 attempts, return
@@ -105,10 +106,10 @@ run_glm3_model <- function(sim_dir, nml_obj, model_config, export_fl_template) {
         },
         until=function(val, cnd) glm_code == 0 & max_output_date==sim_stop,
         max_tries = 2)
-      
-      # make sure glm did succeed  
+
+      # make sure glm did succeed
       if(glm_code != 0 | max_output_date!=sim_stop) stop()
-      
+
       # extract output
       export_fl <- sprintf(export_fl_template, site_id, driver, time_period)
       extraction_error <- tryCatch(
@@ -128,12 +129,12 @@ run_glm3_model <- function(sim_dir, nml_obj, model_config, export_fl_template) {
       # If extraction error is NOT NA, trigger error
       # and return the error export_tibble
       if (!is.na(extraction_error)) stop()
-      
+
       # If output was extracted, delete simulation directory
       # We are _not_ deleting the simulation directory for failed
       # runs so that we can explore the model output
       unlink(sim_lake_dir, recursive = TRUE)
-      
+
       # Build export tibble with export file, its hash, and glm run information
       export_tibble <- tibble(
         site_id = site_id,
