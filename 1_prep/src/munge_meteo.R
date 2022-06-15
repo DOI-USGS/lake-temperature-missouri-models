@@ -24,8 +24,8 @@ munge_nldas_dates <- function(nldas_csvs, nldas_time_period) {
     summarize(burn_in_start = min(time), burn_out_end = max(time)) %>%
     mutate(
       driver_type = 'nldas',
-      driver_start_date = as.POSIXct(sprintf('%s-01-01 12:00:00', model_years[1])), # set based on user-defined modeling period
-      driver_end_date = as.POSIXct(sprintf('%s-12-31 12:00:00', model_years[2])), # set based on user-defined modeling period
+      driver_start_date = as.Date(sprintf('%s-01-01', model_years[1])), # set based on user-defined modeling period
+      driver_end_date = as.Date(sprintf('%s-12-31', model_years[2])), # set based on user-defined modeling period
       # the burn-in period is the period that precedes the first full year of the NLDAS time period
       burn_in = driver_start_date - burn_in_start,
       # the burn-out period is the period that follows the final full year of the NLDAS time period
