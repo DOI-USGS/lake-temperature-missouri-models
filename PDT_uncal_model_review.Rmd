@@ -48,20 +48,16 @@ model_obs %>%
 # Model-to-Data Comparisons
 
 ## Heatmap
-```{r heatmap-and-rmse}
+```{r heatmap-and-rmse, warning = FALSE}
 ## Time series comparison
 plot_var_compare(nc_file, field_file,
                  precision = 'days', var_name = 'temp') + ## makes a plot!
   ggtitle('Uncal Model') +
   theme(plot.title = element_text(hjust = 0.5))
-
-
-
-
 ```
 
 
-```{r rmse-review}
+```{r rmse-review, warning = FALSE}
 # define RMSE function
 calc_rmse <- function(mod, obs) {
   # RMSE = √[ Σ(Pi – Oi)2 / n ]
@@ -74,14 +70,14 @@ rmse_vals <- model_obs %>%
   group_by(year, month) %>%
   summarize(rmse = round(calc_rmse(Modeled_temp, Observed_temp), 2))
 
-# plot by year
+# generate tabular summary
 rmse_vals %>% 
   pivot_wider(names_from = year, values_from = rmse) %>% 
   arrange(month) %>%
   kbl() %>% 
   kable_styling()
 
-# generate tabular summary
+# plot by year
 rmse_vals %>% 
   arrange(year, month) %>% 
   mutate(year = as.factor(year)) %>% 
@@ -90,6 +86,14 @@ rmse_vals %>%
   geom_hline( yintercept = 1.5) +
   # geom_line() +
   facet_wrap(~ year)
+
+# plot by month
+rmse_vals %>% 
+  arrange(year, month) %>% 
+  ggplot(., aes(x = year, y = rmse)) +
+  geom_point() +
+  geom_hline( yintercept = 1.5) +
+  facet_wrap(~ month)
 ```
 
 
