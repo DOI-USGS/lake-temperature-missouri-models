@@ -58,7 +58,7 @@ set_eval_glm <- function(par, caldata_fl, sim_dir, nml_obj){
 
     nml_obj <- glmtools::set_nml(nml_obj, arg_list = as.list(par))
 
-    # from "3_calibrate/run_glm_utils.R"
+    # from "3_calibrate/calibration_utils.R"
     sim_fl <- run_glm(sim_dir, nml_obj)
 
     last_time <- glmtools::get_var(sim_fl, 'wind') %>%
