@@ -2,12 +2,12 @@ source('1_prep/src/munge_meteo.R')
 source('1_prep/src/build_model_config.R')
 source('1_prep/src/munge_nmls.R')
 
+# prep model inputs ----------------------------
 p1 <- list(
   # Pull in GLM 3 template
   tar_target(p1_glm_template_nml, '1_prep/in/glm3_template.nml', format = 'file'),
 
   ##### Pull in files from lake-temperature-model-prep #####
-  # TODO - transfer to Denali using globus
   # list of lake-specific attributes for nml modification
   # file copied from lake-temperature-model-prep repo '7_config_merge/out/nml_list.rds'
   tar_target(p1_nml_list_rds, '1_prep/in/nml_list.rds', format = 'file'),
@@ -16,8 +16,7 @@ p1 <- list(
   # Temperature observations `7b_temp_merge/out/merged_temp_data_daily.feather`
   tar_target(p1_obs_feather, '1_prep/in/merged_temp_data_daily.feather', format = 'file'),
 
-  # University of MO xwalk, filtered to only those lakes that are in nml list (able to be modeled by GLM)
-  # used to define site_ids for NLDAS runs, not for GCM runs
+  # University of MO xwalk used to define site_ids for NLDAS runs
   # file copied from lake-temperature-model-prep repo '2_crosswalk_munge/out/univ_mo_nhdhr_xwalk.rds'
   tar_target(p1_univ_mo_xwalk_rds, '1_prep/in/univ_mo_nhdhr_xwalk.rds', format='file'),
   tar_target(p1_lake_to_univ_mo_xwalk_df,
@@ -73,4 +72,3 @@ p1 <- list(
              packages = c('glmtools'),
              iteration = 'list')
 )
-
