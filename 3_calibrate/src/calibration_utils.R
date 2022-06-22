@@ -1,4 +1,13 @@
-# nabbed from - https://github.com/USGS-R/lake-temperature-process-models-old/blob/79ccf6f2c7a8631549e8c935a26133db9ab4f968/3_run/src/calibration_utils.R
+#' Functions in this files were derived from - https://github.com/USGS-R/lake-temperature-process-models-old/blob/79ccf6f2c7a8631549e8c935a26133db9ab4f968/3_run/src/calibration_utils.R
+
+#' Run GLM3 calibration
+#'
+#' @param nml_file chr, nml file name
+#' @param sim_dir chr, file path for simulation
+#' @param cal_params chr, a vector of GLM3 calibration parameters
+#' @param cal_parscale num, named list of calibration parameters and their calibration starting values
+#' @param caldata_fl chr, full path name for calibration data
+#'
 run_glm_cal <- function(nml_file, sim_dir, cal_params = c('cd','sw_factor','coef_mix_hyp'),
                         cal_parscale = c('cd' = 0.0001, 'sw_factor' = 0.02, 'coef_mix_hyp' = 0.01),
                         caldata_fl){
@@ -6,6 +15,7 @@ run_glm_cal <- function(nml_file, sim_dir, cal_params = c('cd','sw_factor','coef
   # read cal/obs file, filter to _this_ lake if needed, write to csv/tsv so it will work with glmtools::compare_to_field
 
   nml_obj <- glmtools::read_nml(nml_file)
+
   # get starting values for params that will be modified
   cal_starts <- sapply(cal_params, FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
 
@@ -33,6 +43,12 @@ run_glm_cal <- function(nml_file, sim_dir, cal_params = c('cd','sw_factor','coef
   return(nml_obj)
 }
 
+#' @param par
+#' @param  caldata_fl
+#' @param sim_dir
+#' @param nml_obj
+#'
+
 set_eval_glm <- function(par, caldata_fl, sim_dir, nml_obj){
   # set params, run model, check valid, calc rmse
   # message(paste(as.list(par), collapse = ', ', sep = '| '))
@@ -41,7 +57,8 @@ set_eval_glm <- function(par, caldata_fl, sim_dir, nml_obj){
   rmse = tryCatch({
 
     nml_obj <- glmtools::set_nml(nml_obj, arg_list = as.list(par))
-    # from "run_glm_utils.R"
+
+    # from "3_calibrate/run_glm_utils.R"
     sim_fl <- run_glm(sim_dir, nml_obj)
 
     last_time <- glmtools::get_var(sim_fl, 'wind') %>%
@@ -61,3 +78,24 @@ set_eval_glm <- function(par, caldata_fl, sim_dir, nml_obj){
   message(rmse)
   return(rmse)
 }
+
+
+run_glm <- function(sim_dir, nml_obj, export_file = NULL){
+
+  glmtools::write_nml(nml_obj, file.path(sim_dir, 'glm2.nml'))
+
+  GLMr::run_glm(sim_dir, verbose = FALSE)
+  out_dir <- glmtools::get_nml_value(nml_obj, arg_name = 'out_dir')
+  out_file <- paste0(glmtools::get_nml_value(nml_obj, arg_name = 'out_fn'), '.nc')
+  if (out_dir == '.'){
+    nc_path <- file.path(sim_dir, out_file)
+  } else {
+    nc_path <- file.path(sim_dir, out_dir, out_file)
+  }
+
+  if (!is.null(export_file)){
+    export_temp(filepath = export_file, nml_obj, nc_filepath = nc_path)
+  }
+  invisible(nc_path)
+}
+
