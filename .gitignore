@@ -48,8 +48,9 @@ _targets
 */out/*
 
 ## Ignore test calibration files
-*/output/*
+test_sim/*/output/*
 test_calibration_scratch/
+*.html
 
 ## Allow the nml template to be committed
 !1_prep/in/glm3_template.nml
@@ -58,3 +59,4 @@ test_calibration_scratch/
 !*/in/.empty
 !*/tmp/.empty
 !*/out/.empty
+
