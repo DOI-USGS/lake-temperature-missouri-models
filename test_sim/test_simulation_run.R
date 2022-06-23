@@ -6,7 +6,6 @@ library(tidyverse)
 source('3_calibrate/src/calibration_utils.R')
 
 # prep calibration parameters
-cal_params <- c('cd','sw_factor','coef_mix_hyp')
 cal_parscale <- c('cd' = 0.0001, 'sw_factor' = 0.02, 'coef_mix_hyp' = 0.01)
 
 # Prep lake specific inputs for Pomme De Terre (PDT) Lake - nhdhr_102216470

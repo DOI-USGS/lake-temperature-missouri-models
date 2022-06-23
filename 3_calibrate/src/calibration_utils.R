@@ -4,11 +4,11 @@
 #'
 #' @param nml_file chr, nml file name
 #' @param sim_dir chr, file path for simulation
-#' @param cal_params chr, a vector of GLM3 calibration parameters
-#' @param cal_parscale num, named list of calibration parameters and their calibration starting values
+#' @param cal_parscale num, named list of calibration parameter names and scaling values. More information under `Details` for the `stats::optim` function.
 #' @param caldata_fl chr, full path name for calibration data
 #'
-run_glm_cal <- function(nml_file, sim_dir, cal_params = c('cd','sw_factor','coef_mix_hyp'),
+run_glm_cal <- function(nml_file,
+                        sim_dir,
                         cal_parscale = c('cd' = 0.0001, 'sw_factor' = 0.02, 'coef_mix_hyp' = 0.01),
                         caldata_fl){
 
@@ -17,7 +17,7 @@ run_glm_cal <- function(nml_file, sim_dir, cal_params = c('cd','sw_factor','coef
   nml_obj <- glmtools::read_nml(nml_file)
 
   # get starting values for params that will be modified
-  cal_starts <- sapply(cal_params, FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
+  cal_starts <- sapply(names(cal_parscale), FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
 
   # define parscale for each cal param
   # have to do all of this to match the WRR method of parscale Kw being a function of Kw:
