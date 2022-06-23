@@ -13,15 +13,17 @@ run_glm_cal <- function(nml_file,
                         caldata_fl){
 
   # read cal/obs file, filter to _this_ lake if needed, write to csv/tsv so it will work with glmtools::compare_to_field
-
   nml_obj <- glmtools::read_nml(nml_file)
 
+  # grab cal param names from cal_parscale
+  cal_params <- names(cal_parscale)
+
   # get starting values for params that will be modified
-  cal_starts <- sapply(names(cal_parscale), FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
+  cal_starts <- sapply(cal_params, FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
 
   # define parscale for each cal param
   # have to do all of this to match the WRR method of parscale Kw being a function of Kw:
-  parscale <- sapply(names(cal_parscale), FUN = function(x) {
+  parscale <- sapply(cal_params, FUN = function(x) {
     if (class(cal_parscale[[x]]) == 'call') {
       eval(cal_parscale[[x]], envir = setNames(data.frame(cal_starts[[x]]), x))
     } else cal_parscale[[x]]
