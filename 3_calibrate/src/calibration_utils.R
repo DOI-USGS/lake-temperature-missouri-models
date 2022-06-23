@@ -40,7 +40,8 @@ run_glm_cal <- function(nml_file,
                           sim_time = format(Sys.time(), '%Y-%m-%d %H:%M'),
                           cal_params = cal_params,
                           cal_values = out$par,
-                          cal_parscale = parscale)
+                          cal_parscale = parscale,
+                          glm_version = glm_version(as_char = TRUE))
 
   return(nml_obj)
 }

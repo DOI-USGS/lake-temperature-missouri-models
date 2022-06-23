@@ -14,7 +14,7 @@ nml_file <- file.path(sim_dir, 'glm3.nml')
 caldata_fl <- file.path(sim_dir, 'field_data_nhdhr_102216470.rds')
 
 # run optimization for Pomme De Terre Lake
-run_glm_cal(nml_file, sim_dir, cal_parscale, caldata_fl)
+cal_pdt <- run_glm_cal(nml_file, sim_dir, cal_parscale, caldata_fl)
 
 
 # Prep lake specific inputs for Lake Stockton - nhdhr_106716325
@@ -23,4 +23,4 @@ nml_file <- file.path(sim_dir, 'glm3.nml')
 caldata_fl <- file.path(sim_dir, 'field_data_nhdhr_106716325.rds') #'1_prep/out/field_data_nhdhr_106716325.rds'
 
 # run optimization for Pomme De Terre Lake
-run_glm_cal(nml_file, sim_dir, cal_params, cal_parscale, caldata_fl)
+cal_ls <- run_glm_cal(nml_file, sim_dir, cal_params, cal_parscale, caldata_fl)
