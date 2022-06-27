@@ -3,7 +3,7 @@ source('1_prep/src/build_model_config.R')
 source('1_prep/src/munge_nmls.R')
 
 # prep model inputs ----------------------------
-p1 <- list(
+p1_model_prep <- list(
   # Pull in GLM 3 template
   tar_target(p1_glm_template_nml, '1_prep/in/glm3_template.nml', format = 'file'),
 
@@ -71,4 +71,21 @@ p1 <- list(
                               driver_type = 'nldas'),
              packages = c('glmtools'),
              iteration = 'list')
+)
+
+# observed data ----------------------------
+p1_data_prep <- list(
+  # Pull in observed data from `lake-temperature-model-prep``
+  tar_target(p1_merged_temp_data_daily_feather,
+             '1_prep/in/merged_temp_data_daily.feather',
+             format = 'file'),
+
+  # create an RDS file for each MO model for calibration
+  tar_target(p1_merged_temp_data_list_subset,
+             arrow::read_feather(p1_merged_temp_data_daily_feather) %>%
+               dplyr::filter(site_id %in% p1_nldas_site_ids) %>%
+               saveRDS(sprintf('1_prep/out/field_data_%s.rds', p1_nldas_site_ids)),
+             pattern = map(p1_nldas_site_ids)
+  )
+
 )
