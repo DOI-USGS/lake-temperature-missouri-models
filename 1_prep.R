@@ -36,20 +36,9 @@ p1_model_prep <- list(
 
   # track unique NLDAS meteo files
   # length(p1_nldas_csvs) = # of unique NLDAS files associated with p1_nldas_site_ids
-  tar_target(p1_nldas_csvs,
-             {
-               nldas_files <- c()
-               for (site_id in p1_nldas_site_ids) {
-                 site_nml <- p1_nldas_nml_list_subset[[site_id]]
-                 site_nldas_file <- file.path('1_prep/in/NLDAS_GLM_csvs', site_nml$meteo_fl)
-                 if (!(site_nldas_file %in% nldas_files)) {
-                   nldas_files <- c(nldas_files, site_nldas_file)
-                 }
-               }
-               return(nldas_files)
-             },
-             format = 'file'
-  ),
+  tar_files(p1_nldas_csvs,
+            list.files('1_prep/in/NLDAS_GLM_csvs', full.names = T) %>% unlist
+            ),
 
   # Define model start and end dates and note start of
   # burn-in and end of burn-out based on extent of NLDAS data
@@ -61,7 +50,10 @@ p1_model_prep <- list(
 
   # Set up NLDAS model config
   tar_target(p1_nldas_model_config,
-             build_nldas_model_config(p1_nldas_site_ids, p1_nldas_nml_list_subset, p1_nldas_csvs, p1_nldas_dates)
+             build_nldas_model_config(p1_nldas_site_ids,
+                                      p1_nldas_nml_list_subset,
+                                      p1_nldas_csvs,
+                                      p1_nldas_dates)
   ),
 
   # Set up nmls for NLDAS model runs
@@ -74,18 +66,24 @@ p1_model_prep <- list(
 )
 
 # observed data ----------------------------
-p1_data_prep <- list(
-  # Pull in observed data from `lake-temperature-model-prep``
-  tar_target(p1_merged_temp_data_daily_feather,
-             '1_prep/in/merged_temp_data_daily.feather',
-             format = 'file'),
+# p1_data_prep <- list(
+#   # Pull in observed data from `lake-temperature-model-prep``
+#   tar_target(p1_merged_temp_data_daily_feather,
+#              '1_prep/in/merged_temp_data_daily.feather',
+#              format = 'file'),
+#
+#   # create an RDS file for each MO model for calibration
+#   tar_files(p1_merged_temp_data_subset_rds,
+#              subset_model_obs_data(p1_merged_temp_data_daily_feather),
+#              pattern = map(p1_nldas_site_ids)
+#   )
+#   # # create an RDS file for each MO model for calibration
+#   # tar_target(p1_merged_temp_data_list_subset,
+#   #            arrow::read_feather(p1_merged_temp_data_daily_feather)[p1_nldas_site_ids] %>%
+#   #              dplyr::filter(site_id %in% p1_nldas_site_ids) %>%
+#   #              saveRDS(sprintf('1_prep/out/field_data_%s.rds', p1_nldas_site_ids)),
+#   #            pattern = map(p1_nldas_site_ids)
+#   # )
+#
+# )
 
-  # create an RDS file for each MO model for calibration
-  tar_target(p1_merged_temp_data_list_subset,
-             arrow::read_feather(p1_merged_temp_data_daily_feather) %>%
-               dplyr::filter(site_id %in% p1_nldas_site_ids) %>%
-               saveRDS(sprintf('1_prep/out/field_data_%s.rds', p1_nldas_site_ids)),
-             pattern = map(p1_nldas_site_ids)
-  )
-
-)
