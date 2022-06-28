@@ -3,10 +3,9 @@ source('1_prep/src/build_model_config.R')
 source('1_prep/src/munge_nmls.R')
 source('1_prep/src/munge_obs.R')
 
-# prep model inputs ----------------------------
-p1_model_prep <- list(
+p1 <- list(
 
-  # Model set up ------------------------------------
+  # Prep model ------------------------------------
 
   # Pull in GLM 3 template
   tar_target(p1_glm_template_nml, '1_prep/in/glm3_template.nml', format = 'file'),
