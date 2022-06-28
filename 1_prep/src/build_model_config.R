@@ -14,12 +14,13 @@
 #' @return a dplyr tibble with nrows = length(p1_site_ids) with columns for site_id,
 #' driver ('NLDAS'), time_period, driver_start_date, driver_end_date, burn_in, burn_in_start,
 #' burn_out, burn_out_end, meteo_fl, and meteo_fl_hash
-build_nldas_model_config <- function(site_ids, nml_list, nldas_csvs, nldas_dates) {
+build_nldas_model_config <- function(site_ids, nml_list, nldas_csvs, obs_rds, nldas_dates) {
   meteo_branches <- tibble(
     meteo_fl = nldas_csvs,
     basename_meteo_fl = basename(meteo_fl),
     meteo_fl_hash = tools::md5sum(nldas_csvs)
   )
+
   site_meteo_xwalk <- purrr::map_df(site_ids, function(site_id) {
     site_nml_list <- nml_list[[site_id]]
     site_meteo_xwalk <- tibble(
@@ -28,13 +29,23 @@ build_nldas_model_config <- function(site_ids, nml_list, nldas_csvs, nldas_dates
     )
     return(site_meteo_xwalk)
   })
+
+  site_obs_xwalk <- tibble(
+    site_id = sapply(obs_rds,
+                     function(x){str_match(x, '(?:[^_]*\\_){3}([^.]*)')[2]},
+                     simplify = TRUE),
+    obs_fl = basename(obs_rds),
+    obs_fl_hash =  sapply(obs_rds, tools::md5sum)
+  )
+
   model_config <- tidyr::expand_grid(
     nesting(site_meteo_xwalk),
     driver = 'NLDAS',
     nesting(nldas_dates)) %>%
     arrange(site_id) %>%
-    left_join(meteo_branches, by=c('basename_meteo_fl')) %>%
-    select(-basename_meteo_fl) %>%
+    left_join(meteo_branches, by = c('basename_meteo_fl')) %>%
+    left_join(site_obs_xwalk) %>%
+    select(-basename_meteo_fl, by = 'site_id') %>%
     rowwise()
 
   return(model_config)

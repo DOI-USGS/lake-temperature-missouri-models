@@ -1,9 +1,13 @@
 source('1_prep/src/munge_meteo.R')
 source('1_prep/src/build_model_config.R')
 source('1_prep/src/munge_nmls.R')
+source('1_prep/src/munge_obs.R')
 
 # prep model inputs ----------------------------
 p1_model_prep <- list(
+
+  # Model set up ------------------------------------
+
   # Pull in GLM 3 template
   tar_target(p1_glm_template_nml, '1_prep/in/glm3_template.nml', format = 'file'),
 
@@ -24,7 +28,6 @@ p1_model_prep <- list(
                filter(site_id %in% p1_nml_site_ids) %>%
                arrange(site_id)),
 
-  ##### NLDAS model set up #####
   # Pull vector of site ids
   tar_target(p1_nldas_site_ids, p1_lake_to_univ_mo_xwalk_df %>% pull(site_id)),
 
@@ -48,11 +51,31 @@ p1_model_prep <- list(
     p1_nldas_dates,
     munge_nldas_dates(p1_nldas_csvs, p1_nldas_time_period)),
 
+
+  # Prep observed data for calibration ------------------
+
+  # Pull in observed data from `lake-temperature-model-prep``
+  tar_target(p1_merged_temp_data_daily_feather,
+             '1_prep/in/merged_temp_data_daily.feather',
+             format = 'file'),
+
+  # create an RDS file for each MO model for calibration
+  tar_target(p1_obs_rds,
+             subset_model_obs_data(data = p1_merged_temp_data_daily_feather,
+                                   nhdhr_id = p1_nldas_site_ids,
+                                   path_out = '1_prep/out'),
+             pattern = map(p1_nldas_site_ids),
+             format = 'file'
+  ),
+
+  # model config and set up------------------------------
+
   # Set up NLDAS model config
   tar_target(p1_nldas_model_config,
              build_nldas_model_config(p1_nldas_site_ids,
                                       p1_nldas_nml_list_subset,
                                       p1_nldas_csvs,
+                                      p1_obs_rds,
                                       p1_nldas_dates)
   ),
 
@@ -65,25 +88,4 @@ p1_model_prep <- list(
              iteration = 'list')
 )
 
-# observed data ----------------------------
-# p1_data_prep <- list(
-#   # Pull in observed data from `lake-temperature-model-prep``
-#   tar_target(p1_merged_temp_data_daily_feather,
-#              '1_prep/in/merged_temp_data_daily.feather',
-#              format = 'file'),
-#
-#   # create an RDS file for each MO model for calibration
-#   tar_files(p1_merged_temp_data_subset_rds,
-#              subset_model_obs_data(p1_merged_temp_data_daily_feather),
-#              pattern = map(p1_nldas_site_ids)
-#   )
-#   # # create an RDS file for each MO model for calibration
-#   # tar_target(p1_merged_temp_data_list_subset,
-#   #            arrow::read_feather(p1_merged_temp_data_daily_feather)[p1_nldas_site_ids] %>%
-#   #              dplyr::filter(site_id %in% p1_nldas_site_ids) %>%
-#   #              saveRDS(sprintf('1_prep/out/field_data_%s.rds', p1_nldas_site_ids)),
-#   #            pattern = map(p1_nldas_site_ids)
-#   # )
-#
-# )
 
