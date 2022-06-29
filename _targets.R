@@ -1,6 +1,7 @@
 library(targets)
 library(tarchetypes)
-options(clustermq.scheduler = "multicore")
+library(clustermq)
+options(clustermq.scheduler = "multiprocess")
 
 suppressPackageStartupMessages(library(tidyverse))
 tar_option_set(packages = c('tidyverse',
