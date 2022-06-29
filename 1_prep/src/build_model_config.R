@@ -44,8 +44,8 @@ build_nldas_model_config <- function(site_ids, nml_list, nldas_csvs, obs_rds, nl
     nesting(nldas_dates)) %>%
     arrange(site_id) %>%
     left_join(meteo_branches, by = c('basename_meteo_fl')) %>%
-    left_join(site_obs_xwalk) %>%
-    select(-basename_meteo_fl, by = 'site_id') %>%
+    left_join(site_obs_xwalk, by = 'site_id') %>%
+    select(-basename_meteo_fl) %>%
     rowwise()
 
   return(model_config)
