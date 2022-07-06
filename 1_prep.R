@@ -1,9 +1,12 @@
 source('1_prep/src/munge_meteo.R')
 source('1_prep/src/build_model_config.R')
 source('1_prep/src/munge_nmls.R')
+source('1_prep/src/munge_obs.R')
 
-# prep model inputs ----------------------------
 p1 <- list(
+
+  # Prep model ------------------------------------
+
   # Pull in GLM 3 template
   tar_target(p1_glm_template_nml, '1_prep/in/glm3_template.nml', format = 'file'),
 
@@ -24,7 +27,6 @@ p1 <- list(
                filter(site_id %in% p1_nml_site_ids) %>%
                arrange(site_id)),
 
-  ##### NLDAS model set up #####
   # Pull vector of site ids
   tar_target(p1_nldas_site_ids, p1_lake_to_univ_mo_xwalk_df %>% pull(site_id)),
 
@@ -36,32 +38,44 @@ p1 <- list(
 
   # track unique NLDAS meteo files
   # length(p1_nldas_csvs) = # of unique NLDAS files associated with p1_nldas_site_ids
-  tar_target(p1_nldas_csvs,
-             {
-               nldas_files <- c()
-               for (site_id in p1_nldas_site_ids) {
-                 site_nml <- p1_nldas_nml_list_subset[[site_id]]
-                 site_nldas_file <- file.path('1_prep/in/NLDAS_GLM_csvs', site_nml$meteo_fl)
-                 if (!(site_nldas_file %in% nldas_files)) {
-                   nldas_files <- c(nldas_files, site_nldas_file)
-                 }
-               }
-               return(nldas_files)
-             },
+  tar_files(p1_nldas_csvs,
+            list.files('1_prep/in/NLDAS_GLM_csvs', full.names = T) %>% unlist
+            ),
+
+  # # Define model start and end dates and note start of
+  # # burn-in and end of burn-out based on extent of NLDAS data
+  # # (using 1/2/1979 - 12/31/1979 for burn-in, and 1/1/2021 -
+  # # 4/11/2021 for burn-out)
+  # tar_target(
+  #   p1_nldas_dates,
+  #   munge_nldas_dates(p1_nldas_csvs, p1_nldas_time_period)),
+
+
+  # Prep observed data for calibration ------------------
+
+  # Pull in observed data from `lake-temperature-model-prep``
+  tar_target(p1_merged_temp_data_daily_feather,
+             '1_prep/in/merged_temp_data_daily.feather',
+             format = 'file'),
+
+  # create an RDS file for each MO model for calibration
+  tar_target(p1_obs_rds,
+             subset_model_obs_data(data = p1_merged_temp_data_daily_feather,
+                                   site_id = p1_nldas_site_ids,
+                                   path_out = '1_prep/out'),
+             pattern = map(p1_nldas_site_ids),
              format = 'file'
   ),
 
-  # Define model start and end dates and note start of
-  # burn-in and end of burn-out based on extent of NLDAS data
-  # (using 1/2/1979 - 12/31/1979 for burn-in, and 1/1/2021 -
-  # 4/11/2021 for burn-out)
-  tar_target(
-    p1_nldas_dates,
-    munge_nldas_dates(p1_nldas_csvs, p1_nldas_time_period)),
+  # model config and set up------------------------------
 
   # Set up NLDAS model config
   tar_target(p1_nldas_model_config,
-             build_nldas_model_config(p1_nldas_site_ids, p1_nldas_nml_list_subset, p1_nldas_csvs, p1_nldas_dates)
+             build_nldas_model_config(p1_nldas_nml_list_subset,
+                                      p1_nldas_csvs,
+                                      p1_nldas_time_period,
+                                      p1_obs_rds
+                                      )
   ),
 
   # Set up nmls for NLDAS model runs
@@ -72,3 +86,5 @@ p1 <- list(
              packages = c('glmtools'),
              iteration = 'list')
 )
+
+

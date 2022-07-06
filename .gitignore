@@ -48,8 +48,7 @@ _targets
 */out/*
 
 ## Ignore test calibration files
-test_sim/*/output/*
-test_calibration_scratch/
+test_sim/
 *.html
 
 ## Allow the nml template to be committed
