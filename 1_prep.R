@@ -61,7 +61,7 @@ p1 <- list(
   # create an RDS file for each MO model for calibration
   tar_target(p1_obs_rds,
              subset_model_obs_data(data = p1_merged_temp_data_daily_feather,
-                                   nhdhr_id = p1_nldas_site_ids,
+                                   site_id = p1_nldas_site_ids,
                                    path_out = '1_prep/out'),
              pattern = map(p1_nldas_site_ids),
              format = 'file'
