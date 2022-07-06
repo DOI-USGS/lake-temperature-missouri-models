@@ -42,13 +42,13 @@ p1 <- list(
             list.files('1_prep/in/NLDAS_GLM_csvs', full.names = T) %>% unlist
             ),
 
-  # Define model start and end dates and note start of
-  # burn-in and end of burn-out based on extent of NLDAS data
-  # (using 1/2/1979 - 12/31/1979 for burn-in, and 1/1/2021 -
-  # 4/11/2021 for burn-out)
-  tar_target(
-    p1_nldas_dates,
-    munge_nldas_dates(p1_nldas_csvs, p1_nldas_time_period)),
+  # # Define model start and end dates and note start of
+  # # burn-in and end of burn-out based on extent of NLDAS data
+  # # (using 1/2/1979 - 12/31/1979 for burn-in, and 1/1/2021 -
+  # # 4/11/2021 for burn-out)
+  # tar_target(
+  #   p1_nldas_dates,
+  #   munge_nldas_dates(p1_nldas_csvs, p1_nldas_time_period)),
 
 
   # Prep observed data for calibration ------------------
@@ -71,11 +71,11 @@ p1 <- list(
 
   # Set up NLDAS model config
   tar_target(p1_nldas_model_config,
-             build_nldas_model_config(p1_nldas_site_ids,
-                                      p1_nldas_nml_list_subset,
+             build_nldas_model_config(p1_nldas_nml_list_subset,
                                       p1_nldas_csvs,
-                                      p1_obs_rds,
-                                      p1_nldas_dates)
+                                      p1_nldas_time_period,
+                                      p1_obs_rds
+                                      )
   ),
 
   # Set up nmls for NLDAS model runs
