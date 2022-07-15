@@ -51,24 +51,32 @@ run_glm_cal <- function(nml_obj,
   # get starting values for params that will be modified
   cal_starts <- sapply(cal_params, FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
 
-  # define parscale for each cal param
-  # have to do all of this to match the WRR method of parscale Kw being a function of Kw:
-  parscale <- sapply(names(cal_parscale), FUN = function(x) {
-    if (class(cal_parscale[[x]]) == 'call') {
-      eval(cal_parscale[[x]], envir = setNames(data.frame(cal_starts[[x]]), x))
-    } else cal_parscale[[x]]
-  })
-
-  # use optim to pass in params, parscale, calibration_fun, compare_file, sim_dir
+  # build obs data file path
   tmp_cal <- file.path('1_prep/out', cal_data_fl)
 
   if(optimize == T) {
-    # calibrate the model
-    out <- optim(fn = set_eval_glm, par = cal_starts, control = list(parscale = parscale),
-                 caldata_fl = tmp_cal, sim_dir = sim_lake_dir, nml_obj = nml_obj)
+
+    # define parscale for each cal param
+    parscale <- sapply(names(cal_parscale), FUN = function(x) {
+      if (class(cal_parscale[[x]]) == 'call') {
+        eval(cal_parscale[[x]],
+             envir = setNames(data.frame(cal_starts[[x]]), x))
+      } else cal_parscale[[x]]
+    })
+
+    # calibrate the model -
+    # use optim to pass in params, parscale, calibration_fun,
+    # compare_file, sim_dir
+    out <- optim(fn = set_eval_glm, par = cal_starts,
+                 control = list(parscale = parscale),
+                 caldata_fl = tmp_cal,
+                 sim_dir = sim_lake_dir,
+                 nml_obj = nml_obj)
 
     out_nml_file <- 'glm_cal.nml'
+
   } else {
+
     # run the model "as is"
     rmse <- set_eval_glm(par = cal_starts,
                         caldata_fl = tmp_cal,
