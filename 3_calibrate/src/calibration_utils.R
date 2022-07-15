@@ -18,7 +18,7 @@ run_glm_cal <- function(nml_obj,
   time_period <- model_config$time_period
   driver <- model_config$driver
   raw_meteo_fl <- model_config$meteo_fl
-  cal_data_fl <- model_config$obs_fl
+  raw_obs_fl <- model_config$obs_fl
 
   # Define simulation start and stop dates based on burn-in and burn-out periods
   sim_start <- as.character(model_config$burn_in_start)
@@ -31,10 +31,6 @@ run_glm_cal <- function(nml_obj,
   # copy meteo data to sim_lake_dir
   sim_meteo_filename <- basename(raw_meteo_fl)
   file.copy(from = raw_meteo_fl, to = sim_lake_dir)
-
-  # # copy obs data to sim_lake_dir
-  # sim_obs_filename <- basename(raw_meteo_fl)
-  # file.copy(from = raw_meteo_fl, to = sim_lake_dir)
 
   # set parameters
   # write nml file, specifying meteo file and start and stop dates:
@@ -51,8 +47,8 @@ run_glm_cal <- function(nml_obj,
   # get starting values for params that will be modified
   cal_starts <- sapply(cal_params, FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
 
-  # build obs data file path
-  tmp_cal <- file.path('1_prep/out', cal_data_fl)
+  # # build obs data file path
+  # tmp_cal <- file.path('1_prep/out', cal_data_fl)
 
   if(optimize == T) {
 
@@ -69,7 +65,7 @@ run_glm_cal <- function(nml_obj,
     # compare_file, sim_dir
     out <- optim(fn = set_eval_glm, par = cal_starts,
                  control = list(parscale = parscale),
-                 caldata_fl = tmp_cal,
+                 caldata_fl = raw_obs_fl,
                  sim_dir = sim_lake_dir,
                  nml_obj = nml_obj)
 
@@ -79,7 +75,7 @@ run_glm_cal <- function(nml_obj,
 
     # run the model "as is"
     rmse <- set_eval_glm(par = cal_starts,
-                        caldata_fl = tmp_cal,
+                        caldata_fl = raw_obs_fl,
                         sim_dir = sim_lake_dir,
                         nml_obj = nml_obj)
 

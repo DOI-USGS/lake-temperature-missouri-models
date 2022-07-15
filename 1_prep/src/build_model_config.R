@@ -43,7 +43,7 @@ build_nldas_model_config <- function(nml_list,
     site_id = sapply(obs_rds,
                      function(x){str_match(x, '(?:[^_]*\\_){3}([^.]*)')[2]},
                      simplify = TRUE),
-    obs_fl = basename(obs_rds),
+    obs_fl = obs_rds,
     obs_fl_hash =  sapply(obs_rds, tools::md5sum)
   )
 
