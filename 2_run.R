@@ -20,7 +20,7 @@ p2 <- list(
         sim_dir = '2_run/out',
         cal_parscale = c('cd' = 0.0001, 'sw_factor' = 0.02, 'Kw' = 0.01),
         model_config = p1_nldas_model_config,
-        optimize = FALSE)
+        calibrate = FALSE)
     },
     pattern = map(p1_nldas_model_config, p1_nldas_nml_objects))
 

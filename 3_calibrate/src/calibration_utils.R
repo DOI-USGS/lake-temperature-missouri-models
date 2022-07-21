@@ -5,13 +5,14 @@
 #' @param nml_obj list, nml object created using glmtools::read_nml
 #' @param sim_dir chr, file path for simulation
 #' @param cal_parscale num, named list of calibration parameter names and scaling values. More information under `Details` for the `stats::optim` function.
-#' @param caldata_fl chr, full path name for calibration data
+#' @param model_config data.frame that contains model configuration information
+#' @param calibrate logical, should the model be calibrated? Defaults to `FALSE`
 #'
 run_glm_cal <- function(nml_obj,
                         sim_dir,
                         cal_parscale = c('cd' = 0.0001, 'sw_factor' = 0.02, 'Kw' = 0.01),
                         model_config,
-                        optimize = F){
+                        calibrate = FALSE){
 
   # pull parameters from model_config to set up GLM3 file and sim directory
   site_id <- model_config$site_id
@@ -50,7 +51,7 @@ run_glm_cal <- function(nml_obj,
   # # build obs data file path
   # tmp_cal <- file.path('1_prep/out', cal_data_fl)
 
-  if(optimize == T) {
+  if(calibrate) {
 
     # define parscale for each cal param
     parscale <- sapply(names(cal_parscale), FUN = function(x) {
@@ -65,7 +66,7 @@ run_glm_cal <- function(nml_obj,
     # compare_file, sim_dir
     out <- optim(fn = set_eval_glm, par = cal_starts,
                  control = list(parscale = parscale),
-                 caldata_fl = raw_obs_fl,
+                 evaldata_fl = raw_obs_fl,
                  sim_dir = sim_lake_dir,
                  nml_obj = nml_obj)
 
@@ -75,7 +76,7 @@ run_glm_cal <- function(nml_obj,
 
     # run the model "as is"
     rmse <- set_eval_glm(par = cal_starts,
-                        caldata_fl = raw_obs_fl,
+                        evaldata_fl = raw_obs_fl,
                         sim_dir = sim_lake_dir,
                         nml_obj = nml_obj)
 
@@ -89,7 +90,7 @@ run_glm_cal <- function(nml_obj,
     parscale <- 'N/A'
   }
 
-  nlm_obj <- glmtools::set_nml(nml_obj,
+  nml_obj <- glmtools::set_nml(nml_obj,
                                arg_list = setNames(as.list(out$par), cal_params))
 
   # write the rmse and other details into a new block in the nml "results"
@@ -98,7 +99,7 @@ run_glm_cal <- function(nml_obj,
                           params = cal_params,
                           values = out$par,
                           parscale = parscale,
-                          calibrated = optimize,
+                          calibrated = calibrate,
                           glm_version = glm_version(as_char = TRUE))
 
   file_out <- file.path(sim_lake_dir,
@@ -111,12 +112,12 @@ run_glm_cal <- function(nml_obj,
 }
 
 #' @param par num, vector of GLM3 values used in calibration
-#' @param caldata_fl chr, calibration data file
+#' @param evaldata_fl chr, evaluation data file
 #' @param sim_dir chr, simulation directory
 #' @param nml_obj list, nml object created using glmtools::read_nml
 #'
 
-set_eval_glm <- function(par, caldata_fl, sim_dir, nml_obj){
+set_eval_glm <- function(par, evaldata_fl, sim_dir, nml_obj){
 
   # run model, verify legit sim and calculate/return calibration RSME,
   # otherwise return 10 or 999 (something high)
@@ -134,7 +135,7 @@ set_eval_glm <- function(par, caldata_fl, sim_dir, nml_obj){
       stop('incomplete sim, ended on ', last_time)
     }
 
-    rmse <- glmtools::compare_to_field(sim_fl, field_file = caldata_fl,
+    rmse <- glmtools::compare_to_field(sim_fl, field_file = evaldata_fl,
                                        metric = 'water.temperature')
 
   }, error = function(e){

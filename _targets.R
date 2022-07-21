@@ -12,6 +12,8 @@ tar_option_set(packages = c('tidyverse',
                             'ggplot2',
                             'glmtools'))
 
+# tar_option_set(debug = "p2_nldas_glm_default_runs")
+
 source('1_prep.R')
 source('2_run.R')
 # source('3_calibrate.R')
