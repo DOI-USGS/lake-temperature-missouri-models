@@ -5,19 +5,21 @@
 #' @param nml_obj list, nml object created using glmtools::read_nml
 #' @param sim_dir chr, file path for simulation
 #' @param cal_parscale num, named list of calibration parameter names and scaling values. More information under `Details` for the `stats::optim` function.
-#' @param caldata_fl chr, full path name for calibration data
+#' @param model_config data.frame that contains model configuration information
+#' @param calibrate logical, should the model be calibrated? Defaults to `FALSE`
 #'
 run_glm_cal <- function(nml_obj,
                         sim_dir,
                         cal_parscale = c('cd' = 0.0001, 'sw_factor' = 0.02, 'Kw' = 0.01),
-                        model_config){
+                        model_config,
+                        calibrate = FALSE){
 
   # pull parameters from model_config to set up GLM3 file and sim directory
   site_id <- model_config$site_id
   time_period <- model_config$time_period
   driver <- model_config$driver
   raw_meteo_fl <- model_config$meteo_fl
-  cal_data_fl <- model_config$obs_fl
+  raw_obs_fl <- model_config$obs_fl
 
   # Define simulation start and stop dates based on burn-in and burn-out periods
   sim_start <- as.character(model_config$burn_in_start)
@@ -30,10 +32,6 @@ run_glm_cal <- function(nml_obj,
   # copy meteo data to sim_lake_dir
   sim_meteo_filename <- basename(raw_meteo_fl)
   file.copy(from = raw_meteo_fl, to = sim_lake_dir)
-
-  # # copy obs data to sim_lake_dir
-  # sim_obs_filename <- basename(raw_meteo_fl)
-  # file.copy(from = raw_meteo_fl, to = sim_lake_dir)
 
   # set parameters
   # write nml file, specifying meteo file and start and stop dates:
@@ -50,36 +48,63 @@ run_glm_cal <- function(nml_obj,
   # get starting values for params that will be modified
   cal_starts <- sapply(cal_params, FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
 
-  # define parscale for each cal param
-  # have to do all of this to match the WRR method of parscale Kw being a function of Kw:
-  parscale <- sapply(names(cal_parscale), FUN = function(x) {
-    if (class(cal_parscale[[x]]) == 'call') {
-      eval(cal_parscale[[x]], envir = setNames(data.frame(cal_starts[[x]]), x))
-    } else cal_parscale[[x]]
-  })
+  # # build obs data file path
+  # tmp_cal <- file.path('1_prep/out', cal_data_fl)
 
-  # use optim to pass in params, parscale, calibration_fun, compare_file, sim_dir
-  tmp_cal <- file.path('1_prep/out', cal_data_fl)
-  out <- optim(fn = set_eval_glm, par = cal_starts, control = list(parscale = parscale),
-               caldata_fl = tmp_cal, sim_dir = sim_lake_dir, nml_obj = nml_obj)
+  if(calibrate) {
 
-  nlm_obj <- glmtools::set_nml(nml_obj,
+    # define parscale for each cal param
+    parscale <- sapply(names(cal_parscale), FUN = function(x) {
+      if (class(cal_parscale[[x]]) == 'call') {
+        eval(cal_parscale[[x]],
+             envir = setNames(data.frame(cal_starts[[x]]), x))
+      } else cal_parscale[[x]]
+    })
+
+    # calibrate the model -
+    # use optim to pass in params, parscale, calibration_fun,
+    # compare_file, sim_dir
+    out <- optim(fn = set_eval_glm, par = cal_starts,
+                 control = list(parscale = parscale),
+                 evaldata_fl = raw_obs_fl,
+                 sim_dir = sim_lake_dir,
+                 nml_obj = nml_obj)
+
+    out_nml_file <- 'glm_cal.nml'
+
+  } else {
+
+    # run the model "as is"
+    rmse <- set_eval_glm(par = cal_starts,
+                        evaldata_fl = raw_obs_fl,
+                        sim_dir = sim_lake_dir,
+                        nml_obj = nml_obj)
+
+    # create  dummy `out` object for downstream use
+    out <- list(
+      par = cal_starts,
+      value = rmse
+    )
+
+    out_nml_file <- 'glm_uncal.nml'
+    parscale <- 'N/A'
+  }
+
+  nml_obj <- glmtools::set_nml(nml_obj,
                                arg_list = setNames(as.list(out$par), cal_params))
 
   # write the rmse and other details into a new block in the nml "results"
   nml_obj$results <- list(rmse = out$value,
                           sim_time = format(Sys.time(), '%Y-%m-%d %H:%M'),
-                          cal_params = cal_params,
-                          cal_values = out$par,
-                          cal_parscale = parscale,
+                          params = cal_params,
+                          values = out$par,
+                          parscale = parscale,
+                          calibrated = calibrate,
                           glm_version = glm_version(as_char = TRUE))
-
-  # # TMP
-  # nml_obj_out <- run_glm3(sim_lake_dir, nml_obj)
 
   file_out <- file.path(sim_lake_dir,
                         get_nml_value(nml_obj, arg_name = 'out_dir'),
-                        'glm_cal.nml')
+                        out_nml_file)
 
   glmtools::write_nml(nml_obj, file = file_out)
 
@@ -87,16 +112,15 @@ run_glm_cal <- function(nml_obj,
 }
 
 #' @param par num, vector of GLM3 values used in calibration
-#' @param caldata_fl chr, calibration data file
+#' @param evaldata_fl chr, evaluation data file
 #' @param sim_dir chr, simulation directory
 #' @param nml_obj list, nml object created using glmtools::read_nml
 #'
 
-set_eval_glm <- function(par, caldata_fl, sim_dir, nml_obj){
-  # set params, run model, check valid, calc rmse
-  # message(paste(as.list(par), collapse = ', ', sep = '| '))
+set_eval_glm <- function(par, evaldata_fl, sim_dir, nml_obj){
 
-  # run model, verify legit sim and calculate/return calibration RSME, otherwise return 10 or 999 (something high)
+  # run model, verify legit sim and calculate/return calibration RSME,
+  # otherwise return 10 or 999 (something high)
   rmse = tryCatch({
 
     nml_obj <- glmtools::set_nml(nml_obj, arg_list = as.list(par))
@@ -111,7 +135,7 @@ set_eval_glm <- function(par, caldata_fl, sim_dir, nml_obj){
       stop('incomplete sim, ended on ', last_time)
     }
 
-    rmse <- glmtools::compare_to_field(sim_fl, field_file = caldata_fl,
+    rmse <- glmtools::compare_to_field(sim_fl, field_file = evaldata_fl,
                                        metric = 'water.temperature')
 
   }, error = function(e){

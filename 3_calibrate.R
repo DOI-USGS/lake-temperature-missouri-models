@@ -21,7 +21,8 @@ p3 <- list(
         nml_obj = p1_nldas_nml_objects,
         sim_dir = '3_calibrate/out',
         cal_parscale = c('cd' = 0.0001, 'sw_factor' = 0.02, 'Kw' = 0.01),
-        model_config = p1_nldas_model_config)
+        model_config = p1_nldas_model_config,
+        optimize = TRUE)
     },
     # packages = c('retry','glmtools', 'GLM3r'), # not currently using `retry`
     pattern = map(p1_nldas_model_config, p1_nldas_nml_objects))
