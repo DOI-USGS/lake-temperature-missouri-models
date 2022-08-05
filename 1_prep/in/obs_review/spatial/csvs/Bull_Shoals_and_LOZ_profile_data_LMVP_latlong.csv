@@ -1,0 +1,11 @@
+`Name and Site` and location were manually extracted from the `Site Location` sheet on google drive `lake-temperature-model-prep > 6_temp_coop_fetch > in > Bull_Shoals_and_LOZ_profile_data_LMVP.xlsx`,,
+Name and Site,Latitude,Longitude
+Bull Shoals 7,36.5017,-92.93
+Bull Shoals 8,36.4983,-92.8667
+Lake of the Ozarks 1,38.20654,-92.63132
+Lake of the Ozarks 1.2,38.25389,-92.75305
+Lake of the Ozarks 2.5,38.09385,-92.61431
+Lake of the Ozarks 3,38.21748,-92.67728
+Lake of the Ozarks 31.1,38.078,-92.7453
+Lake of the Ozarks 4.10,38.0261,-92.7958
+Lake of the Ozarks 51,38.18908,-92.96724
