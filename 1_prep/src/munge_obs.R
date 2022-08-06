@@ -4,11 +4,14 @@
 #' @param site_id chr, site id for the lake of interest
 #' @param path_out chr, subfolder for writing the lake-specific dataset
 #'
-subset_model_obs_data <- function(data, site_id, path_out = '1_prep/out') {
+subset_model_obs_data <- function(data, site_id, path_out = '1_prep/out/field_data_all') {
 
   site_id_filter <- site_id
 
   out_fl_name <- sprintf('1_prep/out/field_data_%s.rds', site_id_filter)
+
+  # check for path_out directory and create if not found
+  if(!dir.exists(path_out)){dir.create(path_out)}
 
   arrow::read_feather(data) %>%
     dplyr::filter(site_id %in% site_id_filter) %>%
