@@ -1,5 +1,5 @@
 This data set was created manuall and was derived using Google Earth aeriel photography,,,,
-lake,dam,lat,long,site_id
+lake,site,lat,long,site_id
 Bull Shoals Lake,Bull Shoals Dam,36.366246,-92.575086,nhdhr_120032533
 Lake Ozark - Bagnell Dam,Bagnell Dam,38.203492,-92.625074,nhdhr_120032269
 Lake Stockton,Stockton Dam,37.69376,-93.769473,nhdhr_106716325

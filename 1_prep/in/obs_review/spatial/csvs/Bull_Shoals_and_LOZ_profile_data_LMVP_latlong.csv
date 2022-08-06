@@ -1,5 +1,5 @@
-`Name and Site` and location were manually extracted from the `Site Location` sheet on google drive `lake-temperature-model-prep > 6_temp_coop_fetch > in > Bull_Shoals_and_LOZ_profile_data_LMVP.xlsx`,,
-Name and Site,Latitude,Longitude
+`site` and location were manually extracted from the `Site Location` sheet on google drive `lake-temperature-model-prep > 6_temp_coop_fetch > in > Bull_Shoals_and_LOZ_profile_data_LMVP.xlsx`,,
+site,lat,long
 Bull Shoals 7,36.5017,-92.93
 Bull Shoals 8,36.4983,-92.8667
 Lake of the Ozarks 1,38.20654,-92.63132
