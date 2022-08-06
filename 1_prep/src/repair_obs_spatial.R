@@ -56,9 +56,6 @@ create_missing_xwalk <- function(file_in, path_out, transform = NULL) {
 }
 
 
-tbl_row <- p1_obs_coop_files[1, ]
-data <- p1_obs_mo_lakes
-
 repair_coop_data <- function(tbl_row, data) {
 
   # read in data from tibble
@@ -66,12 +63,11 @@ repair_coop_data <- function(tbl_row, data) {
   dat_spatial <- readRDS(tbl_row$xwalk_files)
 
   # name repair for various joins
-  dat_temp <- dat_temp %>%
-    rename(date = DateTime)
+  dat_temp <- validate_names(dat_temp, type = 'temp')
+  dat_spatial <- validate_names(dat_spatial, type = 'spatial')
 
-  if('site_id' %in% names(dat_temp)) {
-    dat_temp %>% rename(site = site_id)
-  }
+  # names(dat_temp)
+  # names(dat_spatial)
 
   raw_data_joined <- left_join(dat_temp, dat_spatial)
 
@@ -88,3 +84,38 @@ repair_coop_data <- function(tbl_row, data) {
 
   return(repaired)
 }
+
+validate_names <- function(df, type = c('temp', 'sf')) {
+  x <- names(df)
+
+  # validate temp names
+  if(type == 'temp') {
+    expected_names <- c('site', 'date', 'temp', 'depth')
+
+    if(all(expected_names %in% x)) {
+      return(df)
+    } else {
+      if('DateTime' %in% x) {df <- df %>% rename(date = DateTime)}
+
+      if('site_id' %in% x) { df <- df %>% rename(site = site_id) }
+      if(!('site' %in% x) & 'Missouri_ID' %in% x) { df <- df %>% rename(site = Missouri_ID) }
+      if(!('site' %in% x) & 'Navico_ID' %in% x) { df <- df %>% rename(site = Navico_ID) }
+    }
+  }
+
+  # validate spatial names
+  if(type == 'spatial') {
+    expected_names <- c('site','geometry')
+
+    if(all(expected_names %in% x)) {
+      return(df)
+    } else {
+      if('site_id' %in% x) { df <- df %>% rename(site = site_id) }
+    }
+  }
+
+  return(df)
+}
+
+
+

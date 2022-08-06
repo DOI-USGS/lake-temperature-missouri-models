@@ -123,8 +123,7 @@ p1 <- list(
                                       'mo_usace_sampling_locations_sf.rds',
                                       'Temp_DO_BSL_MM_DD_YYYY_latlong_sf.rds',
                                       'UniversityofMissouri_2017_2020_Profiles_sf.rds',
-                                      'Navico_lakes_depths_sf.rds')
-                                    )
+                                      'Navico_lakes_depths_sf.rds'))
                )
              ),
 
