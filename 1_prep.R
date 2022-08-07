@@ -38,19 +38,9 @@ p1 <- list(
   tar_target(p1_nldas_time_period, c('1980_2021')),
 
   # track unique NLDAS meteo files
-  # length(p1_nldas_csvs) = # of unique NLDAS files associated with p1_nldas_site_ids
   tar_files(p1_nldas_csvs,
             list.files('1_prep/in/NLDAS_GLM_csvs', full.names = T) %>% unlist
             ),
-
-  # # Define model start and end dates and note start of
-  # # burn-in and end of burn-out based on extent of NLDAS data
-  # # (using 1/2/1979 - 12/31/1979 for burn-in, and 1/1/2021 -
-  # # 4/11/2021 for burn-out)
-  # tar_target(
-  #   p1_nldas_dates,
-  #   munge_nldas_dates(p1_nldas_csvs, p1_nldas_time_period)),
-
 
   # Prep observed data for calibration ------------------
 
@@ -101,10 +91,13 @@ p1 <- list(
 
   # list all cooperator data crosswalks
   tar_files(p1_obs_coop_xwalks,
-            list.files('1_prep/in/obs_review/spatial', full.names = TRUE) %>%
+            c(p1_obs_coop_missing_xwalks,
+              list.files('1_prep/in/obs_review/spatial',
+                         full.names = TRUE)) %>%
               .[str_detect(., 'rds')] %>%
               .[!str_detect(., 'wqp')] %>%
-              .[!str_detect(., 'dam')]
+              .[!str_detect(., 'dam')] %>%
+              unique()
   ),
 
   # list all cooperator data files from `7a_temp_coop_munge/tmp` in `lake-temperature-model-prep`
@@ -112,18 +105,12 @@ p1 <- list(
             list.files('1_prep/in/obs_review/temp', full.names = TRUE)
   ),
 
-  # hacky work around to make sure the temp data is
-  # correctly paired with each xwalk
+  # brittle - hacky work around to make sure the temp data is
+  # correctly paired with each xwalk - based on manual inspection
   tar_target(p1_obs_coop_files,
              tibble(
                temp_files = p1_obs_coop_tmp_data,
-               xwalk_files = paste0('1_prep/in/obs_review/spatial/',
-                                    c('Bull_Shoals_and_LOZ_profile_data_LMVP_latlong_sf.rds',
-                                      'Bull_Shoals_Lake_DO_and_Temp_latlong_sf.rds',
-                                      'mo_usace_sampling_locations_sf.rds',
-                                      'Temp_DO_BSL_MM_DD_YYYY_latlong_sf.rds',
-                                      'UniversityofMissouri_2017_2020_Profiles_sf.rds',
-                                      'Navico_lakes_depths_sf.rds'))
+               xwalk_files = p1_obs_coop_xwalks[c(1, 2, 4, 3, 6, 5)]
                )
              ),
 
@@ -139,8 +126,29 @@ p1 <- list(
                                data = p1_obs_mo_lakes),
              pattern = p1_obs_coop_files),
 
+  # combine both data sets
+  tar_target(
+    p1_obs_data_w_spatial,
+    bind_rows(p1_obs_wqp_repaired, p1_obs_coop_repaired)
+  ),
 
+  # set dam buffer distances - units = meters
+  tar_target(p1_dam_buffer,
+             c(5000, 10000, 15000)),
 
+  # subset data based on distance from the dam
+  tar_target(
+    p1_obs_buffer_from_dam,
+    subset_temp_data(temp_data = p1_obs_data_w_spatial,
+                     dam_data = p1_obs_coop_missing_xwalks[agrep('dam_sf',
+                                              p1_obs_coop_missing_xwalks)],
+                     buffer_dist = p1_dam_buffer,
+                     site_id = p1_nldas_site_ids,
+                     path_out = '1_prep/out'
+                     ),
+    pattern = cross(p1_dam_buffer, p1_nldas_site_ids),
+    format = 'file'
+  ),
 
 
   # model config and set up------------------------------
@@ -161,7 +169,6 @@ p1 <- list(
                               driver_type = 'nldas'),
              packages = c('glmtools'),
              iteration = 'list')
-
 )
 
 
