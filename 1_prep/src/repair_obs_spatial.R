@@ -138,32 +138,3 @@ validate_names <- function(df, type = c('temp', 'sf')) {
 }
 
 
-#' Subset observed reservoir data based on distance from the dam
-#'
-#' @param temp_data data.frame, a data.frame with stations, temperature profiles, and spatial information
-#' @param dam_data data.frame, data.frame of reservoir dams and spatial information
-#' @param buffer_dist num, buffer distance from the dam. Units are relative to the `st_crs` of the `sf` object
-#' @param site_id chr, site id for the lake of interest
-#' @param path_out chr, path out where the subsetted data should reside
-#'
-subset_temp_data <- function(temp_data, dam_data, buffer_dist,
-                             site_id, path_out) {
-
-  dam_buffer <- readRDS(dam_data) %>%
-    st_buffer(., dist = buffer_dist)
-
-  # this takes a few seconds
-  data_clip <- st_intersection(temp_data, dam_buffer)
-
-  # prep data to subdivide by GLM lake
-  path_out_clip <- file.path(path_out,
-                         sprintf('field_data_%s_km_clip', buffer_dist/1000))
-
-  # divide the data into individual GLM Lakes
-  out <- subset_model_obs_data(data = data_clip,
-                        site_id = site_id,
-                        path_out = path_out_clip)
-
-  return(out)
-}
-
