@@ -143,17 +143,9 @@ validate_names <- function(df, type = c('temp', 'sf')) {
 #' @param temp_data data.frame, a data.frame with stations, temperature profiles, and spatial information
 #' @param dam_data data.frame, data.frame of reservoir dams and spatial information
 #' @param buffer_dist num, buffer distance from the dam. Units are relative to the `st_crs` of the `sf` object
+#' @param site_id chr, site id for the lake of interest
+#' @param path_out chr, path out where the subsetted data should reside
 #'
-
-# temp_data <- p1_obs_data_w_spatial
-# dam_data <- p1_obs_coop_missing_xwalks[agrep('dam_sf',
-#                                              p1_obs_coop_missing_xwalks)]
-# buffer_dist <- 15000
-# site_id <- p1_nldas_site_ids[1]
-# path_out <- '1_prep/out'
-#
-# mapview(data_clip) + mapview(dam_buffer, color = 'red')
-
 subset_temp_data <- function(temp_data, dam_data, buffer_dist,
                              site_id, path_out) {
 
