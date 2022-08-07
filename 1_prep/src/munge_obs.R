@@ -9,6 +9,15 @@ subset_model_obs_data <- function(data, site_id, path_out = '1_prep/out/field_da
   # renaming this variable to avoid confusion later
   site_id_filter <- site_id
 
+  if('buffer_dist' %in% names(data)) {
+    buffer_dist <- data$buffer_dist[1]/1000
+    path_out <- paste0(path_out, '/field_data_', buffer_dist, '_km_clip')
+
+    out_fl_name <- sprintf('%s/field_data_%s.rds', path_out, site_id_filter)
+  } else {
+    out_fl_name <- sprintf('%s/field_data_%s.rds', path_out, site_id_filter)
+  }
+
   out_fl_name <- sprintf('%s/field_data_%s.rds', path_out, site_id_filter)
 
   # check for path_out directory and create if not found

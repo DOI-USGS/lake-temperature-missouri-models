@@ -130,18 +130,24 @@ p1 <- list(
 
   # subset data based on distance from the dam
   tar_target(
-    p1_obs_buffer_from_dam,
-    subset_temp_data(temp_data = p1_obs_data_w_spatial,
-                     dam_data = p1_obs_coop_missing_xwalks[agrep('dam_sf',
-                                              p1_obs_coop_missing_xwalks)],
-                     buffer_dist = p1_dam_buffer,
-                     site_id = p1_nldas_site_ids,
-                     path_out = '1_prep/out'
-                     ),
-    pattern = cross(p1_dam_buffer, p1_nldas_site_ids),
-    format = 'file'
+    p1_obs_buff_sf,
+    readRDS(p1_obs_coop_missing_xwalks[agrep('dam_sf',
+                                             p1_obs_coop_missing_xwalks)]) %>%
+      st_buffer(., dist = p1_dam_buffer) %>%
+      st_intersection(p1_obs_data_w_spatial, .) %>%
+      mutate(buffer_dist = p1_dam_buffer),
+    pattern = p1_dam_buffer,
+    iteration = 'list'
   ),
 
+  # subdivide data based on `site_id`
+  tar_target(
+    p1_obs_buffer_from_dam,
+    subset_model_obs_data(data = p1_obs_buff_sf,
+                          site_id = p1_nldas_site_ids,
+                          path_out = '1_prep/out'),
+    pattern = cross(p1_obs_buff_sf, p1_nldas_site_ids)
+  ),
 
   # model config and set up------------------------------
 
