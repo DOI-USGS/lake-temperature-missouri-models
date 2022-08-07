@@ -61,15 +61,7 @@ p1 <- list(
   # Prep observed data subsets for for calibration ----------------------
   #' These targets subdivide obs data into groups based on distances from each
   #' dam. The pair process is imperfect because `p1_merged_temp_data_daily_feather`
-  #' does not contain spatial information. To add the spatial information back
-  #' in the following steps are used:
-  #' 1. combine intermediary files lake-temperature-model-prep in `7a_temp_coop_munge/tmp` is joined
-  #' to crosswalks from `1_crosswalk_fetch/out`
-  #'
-  #' Method
-  #' 1 - join obs data to wqp spatial data
-  #' 2 - repair coop data (join tmp data to spatial)
-  #'
+  #' does not contain spatial information.
 
   # filter observed data to mo lakes
   tar_target(p1_obs_mo_lakes,
