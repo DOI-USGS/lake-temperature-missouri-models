@@ -55,7 +55,12 @@ create_missing_xwalk <- function(file_in, path_out, transform = NULL) {
   return(xwalk_file_out)
 }
 
-
+#' Restore spatial information to observed cooperator data using
+#' crosswalks and obs data
+#'
+#' @param tbl_row tibble with two rows: one specifying the full file name for the `tmp` data and one for the crosswalk
+#' @param data data.frame, observed data (`merged_temp_data_daily.feather`) from `lake-temperature-model-prep`
+#'
 repair_coop_data <- function(tbl_row, data) {
 
   # read in data from tibble
@@ -66,10 +71,11 @@ repair_coop_data <- function(tbl_row, data) {
   dat_temp <- validate_names(dat_temp, type = 'temp')
   dat_spatial <- validate_names(dat_spatial, type = 'spatial')
 
-  # names(dat_temp)
-  # names(dat_spatial)
-
-  raw_data_joined <- left_join(dat_temp, dat_spatial)
+  raw_data_joined <- left_join(dat_temp, dat_spatial) %>%
+    mutate(
+      depth = round(depth, 2),
+      temp = round(temp, 2)
+    )
 
   # filter for the data source of interest to minimize
   # accidental matches
@@ -85,6 +91,11 @@ repair_coop_data <- function(tbl_row, data) {
   return(repaired)
 }
 
+#' A helper function to validate data.frame column names
+#'
+#' @param df data.frame with column names that need to be validated
+#' @param type chr, specify the type of data that needs column name validation.
+#'
 validate_names <- function(df, type = c('temp', 'sf')) {
   x <- names(df)
 
@@ -98,8 +109,12 @@ validate_names <- function(df, type = c('temp', 'sf')) {
       if('DateTime' %in% x) {df <- df %>% rename(date = DateTime)}
 
       if('site_id' %in% x) { df <- df %>% rename(site = site_id) }
-      if(!('site' %in% x) & 'Missouri_ID' %in% x) { df <- df %>% rename(site = Missouri_ID) }
-      if(!('site' %in% x) & 'Navico_ID' %in% x) { df <- df %>% rename(site = Navico_ID) }
+      if(!('site' %in% x) & 'Missouri_ID' %in% x) {
+        df <- df %>% rename(site = Missouri_ID)
+        }
+      if(!('site' %in% x) & 'Navico_ID' %in% x) {
+        df <- df %>% rename(site = Navico_ID)
+        }
     }
   }
 
@@ -112,10 +127,51 @@ validate_names <- function(df, type = c('temp', 'sf')) {
     } else {
       if('site_id' %in% x) { df <- df %>% rename(site = site_id) }
     }
+
+    # clean up some weird site names
+    df <- df %>%
+      mutate(site = gsub('mo_usace_', '', site))# %>%
+      # mutate(site = gsub('Navico_', '', site))
   }
 
   return(df)
 }
 
 
+#' Subset observed reservoir data based on distance from the dam
+#'
+#' @param temp_data data.frame, a data.frame with stations, temperature profiles, and spatial information
+#' @param dam_data data.frame, data.frame of reservoir dams and spatial information
+#' @param buffer_dist num, buffer distance from the dam. Units are relative to the `st_crs` of the `sf` object
+#'
+
+# temp_data <- p1_obs_data_w_spatial
+# dam_data <- p1_obs_coop_missing_xwalks[agrep('dam_sf',
+#                                              p1_obs_coop_missing_xwalks)]
+# buffer_dist <- 15000
+# site_id <- p1_nldas_site_ids[1]
+# path_out <- '1_prep/out'
+#
+# mapview(data_clip) + mapview(dam_buffer, color = 'red')
+
+subset_temp_data <- function(temp_data, dam_data, buffer_dist,
+                             site_id, path_out) {
+
+  dam_buffer <- readRDS(dam_data) %>%
+    st_buffer(., dist = buffer_dist)
+
+  # this takes a few seconds
+  data_clip <- st_intersection(temp_data, dam_buffer)
+
+  # prep data to subdivide by GLM lake
+  path_out_clip <- file.path(path_out,
+                         sprintf('field_data_%s_km_clip', buffer_dist/1000))
+
+  # divide the data into individual GLM Lakes
+  out <- subset_model_obs_data(data = data_clip,
+                        site_id = site_id,
+                        path_out = path_out_clip)
+
+  return(out)
+}
 
