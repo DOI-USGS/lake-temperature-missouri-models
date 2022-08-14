@@ -20,9 +20,7 @@ repair_wqp_data <- function(data, xwalk) {
     filter(source %in% sample_sites) %>%
     st_as_sf()
 
-  out_sf <- st_as_sf(out)
-
-  return(out_sf)
+  return(out)
 }
 
 #' Create an `sf` object from a csv that contains stations and lat/long
@@ -71,11 +69,13 @@ repair_coop_data <- function(tbl_row, data) {
   dat_temp <- validate_names(dat_temp, type = 'temp')
   dat_spatial <- validate_names(dat_spatial, type = 'spatial')
 
-  raw_data_joined <- left_join(dat_temp, dat_spatial) %>%
-    mutate(
+  raw_data_joined <- dplyr::right_join(dat_spatial, # dplyr::*_join requires a tbl as the second argument
+                                       dat_temp, by = 'site') %>%
+    dplyr::mutate(
       depth = round(depth, 2),
       temp = round(temp, 2)
-    )
+    ) %>%
+    filter(!st_is_empty(.)) # remove any values where geometry is empty
 
   # filter for the data source of interest to minimize
   # accidental matches
@@ -97,22 +97,22 @@ repair_coop_data <- function(tbl_row, data) {
 #' @param type chr, specify the type of data that needs column name validation.
 #'
 validate_names <- function(df, type = c('temp', 'sf')) {
-  x <- names(df)
+  df_names <- names(df)
 
   # validate temp names
   if(type == 'temp') {
     expected_names <- c('site', 'date', 'temp', 'depth')
 
-    if(all(expected_names %in% x)) {
+    if(all(expected_names %in% df_names)) {
       return(df)
     } else {
-      if('DateTime' %in% x) {df <- df %>% rename(date = DateTime)}
+      if('DateTime' %in% df_names) {df <- df %>% rename(date = DateTime)}
 
-      if('site_id' %in% x) { df <- df %>% rename(site = site_id) }
-      if(!('site' %in% x) & 'Missouri_ID' %in% x) {
+      if('site_id' %in% df_names) { df <- df %>% rename(site = site_id) }
+      if(!('site' %in% df_names) & 'Missouri_ID' %in% df_names) {
         df <- df %>% rename(site = Missouri_ID)
         }
-      if(!('site' %in% x) & 'Navico_ID' %in% x) {
+      if(!('site' %in% df_names) & 'Navico_ID' %in% df_names) {
         df <- df %>% rename(site = Navico_ID)
         }
     }
@@ -122,16 +122,15 @@ validate_names <- function(df, type = c('temp', 'sf')) {
   if(type == 'spatial') {
     expected_names <- c('site','geometry')
 
-    if(all(expected_names %in% x)) {
+    if(all(expected_names %in% df_names)) {
       return(df)
     } else {
-      if('site_id' %in% x) { df <- df %>% rename(site = site_id) }
+      if('site_id' %in% df_names) { df <- df %>% rename(site = site_id) }
     }
 
     # clean up some weird site names
     df <- df %>%
-      mutate(site = gsub('mo_usace_', '', site))# %>%
-      # mutate(site = gsub('Navico_', '', site))
+      mutate(site = gsub('mo_usace_', '', site))
   }
 
   return(df)
