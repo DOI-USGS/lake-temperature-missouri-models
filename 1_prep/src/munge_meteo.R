@@ -13,7 +13,7 @@ munge_nldas_dates <- function(nldas_csvs, nldas_time_period) {
   model_years <- strsplit(nldas_time_period,'_')[[1]]
 
   # Use first csv file, since all have the same date range
-  nldas_meteo <- readr::read_csv(nldas_csvs[1], col_types= cols())
+  nldas_meteo <- readr::read_csv(nldas_csvs[1], show_col_types = FALSE)
 
   nldas_dates <- tibble(
     time = lubridate::as_date(nldas_meteo$time),
