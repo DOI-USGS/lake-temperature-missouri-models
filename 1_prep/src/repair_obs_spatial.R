@@ -29,28 +29,47 @@ repair_wqp_data <- function(data, xwalk) {
 #' @param path_out chr, full path for the location of the `sf` crosswalk
 #' @param transform num, EPSG number that should be used to reproject the crosswalk. The default projection is EPSG 4326.
 #'
-create_missing_xwalk <- function(file_in, path_out, transform = NULL) {
+create_missing_xwalk <- function(file_in, path_out) { #, transform = NULL) {
+
 
   xwalk_file_out <- file_in %>%
     basename(.) %>%
     str_extract(., pattern = '[^.]+') %>%
     sprintf('%s/%s_sf.rds', path_out, .)
 
-  xwalk_out <- readr::read_csv(file_in, skip = 1, col_types = cols()) %>%
-    select(lat, long, contains('site')) %>%
-    # ESPG for UTM 15 N (Wapapello is just west of the boundary) is 32615
-    st_as_sf(coords = c('long', 'lat'), crs = 4326)
 
-  if(!is.null(transform)) {
-    xwalk_out %>%
-      st_transform(transform) %>%
-      saveRDS(., xwalk_file_out)
-  } else {
-    xwalk_out %>%
-      saveRDS(., xwalk_file_out)
-  }
+  purrr::map2(file_in, xwalk_file_out,
+              function(file_in, xwalk_file_out){
+                readr::read_csv(file_in, skip = 1,
+                                show_col_types = FALSE) %>%
+                  dplyr::select(lat, long, contains('site')) %>%
+                  # ESPG for UTM 15 N (Wapapello is just west
+                  #   of the boundary) is 32615
+                  sf::st_as_sf(coords = c('long', 'lat'), crs = 4326) %>%
+                  saveRDS(., xwalk_file_out)
+                })
 
   return(xwalk_file_out)
+  # xwalk_file_out <- file_in %>%
+  #   basename(.) %>%
+  #   str_extract(., pattern = '[^.]+') %>%
+  #   sprintf('%s/%s_sf.rds', path_out, .)
+  #
+  # xwalk_out <- readr::read_csv(file_in, skip = 1, col_types = cols()) %>%
+  #   select(lat, long, contains('site')) %>%
+  #   # ESPG for UTM 15 N (Wapapello is just west of the boundary) is 32615
+  #   st_as_sf(coords = c('long', 'lat'), crs = 4326)
+  #
+  # if(!is.null(transform)) {
+  #   xwalk_out %>%
+  #     st_transform(transform) %>%
+  #     saveRDS(., xwalk_file_out)
+  # } else {
+  #   xwalk_out %>%
+  #     saveRDS(., xwalk_file_out)
+  # }
+  #
+  # return(xwalk_file_out)
 }
 
 #' Restore spatial information to observed cooperator data using

@@ -79,17 +79,17 @@ p1 <- list(
   #' does not contain spatial information.
 
   # list manual cooperator crosswalk files
-  tar_files(p1_obs_manual_xwalks_csv,
-             list.files('1_prep/in/obs_review/spatial/csvs',
-                        full.names = TRUE)
-           ),
+  tar_target(p1_obs_manual_xwalks_csv,
+            list.files('1_prep/in/obs_review/spatial/csvs',
+                       full.names = TRUE),
+            format = 'file'
+  ),
 
   # create missing cooperator crosswalks and dam crosswalk
   tar_target(p1_obs_coop_missing_xwalks_rds,
              create_missing_xwalk(file_in = p1_obs_manual_xwalks_csv,
-                                   path_out = '1_prep/in/obs_review/spatial'),
-             format = 'file',
-             pattern = p1_obs_manual_xwalks_csv),
+                                  path_out = '1_prep/in/obs_review/spatial'),
+             format = 'file'),
 
   # list all cooperator data crosswalks
   tar_target(p1_obs_coop_xwalks_rds,
