@@ -1,0 +1,8 @@
+site and location were extracted from individual data sheets on google drive `lake-temperature-model-prep > 6_temp_coop_fetch > in > Temp_DO_BSL_MM_DD_YYYY.zip`. There may be some intra-site variability in exact locations.,,
+site,lat,long
+Point 2,36.39891667,-92.5322
+Point 5,36.40528333,-92.60335
+Point 12,36.47436667,-92.63831667
+Point 16,36.44658333,-92.68896667
+Point 18,36.44658333,-92.68896667
+Point 20,36.44658333,-92.68896667
