@@ -14,40 +14,48 @@ p1 <- list(
   # Pull in files from lake-temperature-model-prep
   ## list of lake-specific attributes for nml modification
   ## file copied from lake-temperature-model-prep repo '7_config_merge/out/nml_list.rds'
-  tar_target(p1_nml_list_rds, '1_prep/in/nml_list.rds', format = 'file'),
-  tar_target(p1_nml_site_ids, names(readr::read_rds(p1_nml_list_rds))),
+  tar_target(p1_nml_list_rds,
+             '1_prep/in/nml_list.rds',
+             format = 'file'),
+
+  tar_target(p1_nml_site_ids,
+             names(readr::read_rds(p1_nml_list_rds))),
 
   # Temperature observations `7b_temp_merge/out/merged_temp_data_daily.feather`
-  tar_target(p1_obs_feather, '1_prep/in/merged_temp_data_daily.feather', format = 'file'),
+  tar_target(p1_obs_feather,
+             '1_prep/in/merged_temp_data_daily.feather',
+             format = 'file'),
 
   # University of MO xwalk used to define site_ids for NLDAS runs
   # file copied from lake-temperature-model-prep repo '2_crosswalk_munge/out/univ_mo_nhdhr_xwalk.rds'
-  tar_target(p1_univ_mo_xwalk_rds, '1_prep/in/univ_mo_nhdhr_xwalk.rds', format='file'),
+  tar_target(p1_univ_mo_xwalk_rds,
+             '1_prep/in/univ_mo_nhdhr_xwalk.rds',
+             format='file'),
+
   tar_target(p1_lake_to_univ_mo_xwalk_df,
              readr::read_rds(p1_univ_mo_xwalk_rds) %>%
                filter(site_id %in% p1_nml_site_ids) %>%
                arrange(site_id)),
 
   # Pull vector of site ids
-  tar_target(p1_nldas_site_ids, p1_lake_to_univ_mo_xwalk_df %>% pull(site_id)),
+  tar_target(p1_nldas_site_ids,
+             p1_lake_to_univ_mo_xwalk_df %>%
+               pull(site_id)),
 
   # Subset nml list
-  tar_target(p1_nldas_nml_list_subset, readr::read_rds(p1_nml_list_rds)[p1_nldas_site_ids]),
+  tar_target(p1_nldas_nml_list_subset,
+             readr::read_rds(p1_nml_list_rds)[p1_nldas_site_ids]),
 
   # Define NLDAS time period
   tar_target(p1_nldas_time_period, c('1980_2021')),
 
   # track unique NLDAS meteo files
   tar_files(p1_nldas_csvs,
-            list.files('1_prep/in/NLDAS_GLM_csvs', full.names = T) %>% unlist
+            list.files('1_prep/in/NLDAS_GLM_csvs', full.names = T) %>%
+              unlist
             ),
 
   # Prep observed data for calibration ------------------
-
-  # # Pull in observed data from `lake-temperature-model-prep`
-  # tar_target(p1_merged_temp_data_daily_feather,
-  #            '1_prep/in/merged_temp_data_daily.feather',
-  #            format = 'file'),
 
   # create an RDS file for each MO model for calibration
   tar_target(p1_obs_rds,
@@ -70,20 +78,21 @@ p1 <- list(
              ),
 
   # list manual cooperator crosswalk files
-  tar_files(p1_obs_manual_xwalks,
-             list.files('1_prep/in/obs_review/spatial/csvs', full.names = TRUE)
+  tar_files(p1_obs_manual_xwalks_csv,
+             list.files('1_prep/in/obs_review/spatial/csvs',
+                        full.names = TRUE)
            ),
 
   # create missing cooperator crosswalks and dam crosswalk
-  tar_target(p1_obs_coop_missing_xwalks,
-             create_missing_xwalk(file_in = p1_obs_manual_xwalks,
+  tar_target(p1_obs_coop_missing_xwalks_rds,
+             create_missing_xwalk(file_in = p1_obs_manual_xwalks_csv,
                                    path_out = '1_prep/in/obs_review/spatial'),
              format = 'file',
-             pattern = p1_obs_manual_xwalks),
+             pattern = p1_obs_manual_xwalks_csv),
 
   # list all cooperator data crosswalks
-  tar_files(p1_obs_coop_xwalks,
-            c(p1_obs_coop_missing_xwalks,
+  tar_files(p1_obs_coop_xwalks_rds,
+            c(p1_obs_coop_missing_xwalks_rds,
               list.files('1_prep/in/obs_review/spatial',
                          full.names = TRUE)) %>%
               .[str_detect(., 'rds')] %>%
@@ -93,7 +102,7 @@ p1 <- list(
   ),
 
   # list all cooperator data files from `7a_temp_coop_munge/tmp` in `lake-temperature-model-prep`
-  tar_files(p1_obs_coop_tmp_data,
+  tar_files(p1_obs_coop_tmp_data_rds,
             list.files('1_prep/in/obs_review/temp', full.names = TRUE)
   ),
 
@@ -101,8 +110,8 @@ p1 <- list(
   # correctly paired with each xwalk - based on manual inspection
   tar_target(p1_obs_coop_files,
              tibble(
-               temp_files = p1_obs_coop_tmp_data,
-               xwalk_files = p1_obs_coop_xwalks[c(1, 2, 4, 3, 6, 5)]
+               temp_files = p1_obs_coop_tmp_data_rds,
+               xwalk_files = p1_obs_coop_xwalks_rds[c(1, 2, 4, 3, 6, 5)]
                )
              ),
 
@@ -131,8 +140,8 @@ p1 <- list(
   # subset data based on distance from the dam
   tar_target(
     p1_obs_buff_sf,
-    readRDS(p1_obs_coop_missing_xwalks[agrep('dam_sf',
-                                             p1_obs_coop_missing_xwalks)]) %>%
+    readRDS(p1_obs_coop_missing_xwalks_rds[agrep('dam_sf',
+                                             p1_obs_coop_missing_xwalks_rds)]) %>%
       st_buffer(., dist = p1_dam_buffer) %>%
       st_intersection(p1_obs_data_w_spatial, .) %>%
       mutate(buffer_dist = p1_dam_buffer),
@@ -142,10 +151,11 @@ p1 <- list(
 
   # subdivide data based on `site_id`
   tar_target(
-    p1_obs_buffer_from_dam,
+    p1_obs_buffer_from_dam_rds,
     subset_model_obs_data(data = p1_obs_buff_sf,
                           site_id = p1_nldas_site_ids,
                           path_out = '1_prep/out'),
+    format = 'file',
     pattern = cross(p1_obs_buff_sf, p1_nldas_site_ids)
   ),
 
