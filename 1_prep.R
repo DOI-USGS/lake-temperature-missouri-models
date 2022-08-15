@@ -26,6 +26,12 @@ p1 <- list(
              '1_prep/in/merged_temp_data_daily.feather',
              format = 'file'),
 
+  # filter observed data to mo lakes
+  tar_target(p1_obs_mo_lakes,
+             read_feather(p1_obs_feather) %>%
+               filter(site_id %in% p1_nldas_site_ids)
+  ),
+
   # University of MO xwalk used to define site_ids for NLDAS runs
   # file copied from lake-temperature-model-prep repo '2_crosswalk_munge/out/univ_mo_nhdhr_xwalk.rds'
   tar_target(p1_univ_mo_xwalk_rds,
@@ -50,16 +56,17 @@ p1 <- list(
   tar_target(p1_nldas_time_period, c('1980_2021')),
 
   # track unique NLDAS meteo files
-  tar_files(p1_nldas_csvs,
+  tar_target(p1_nldas_csvs,
             list.files('1_prep/in/NLDAS_GLM_csvs', full.names = T) %>%
-              unlist
+              unlist,
+            format = 'file'
             ),
 
   # Prep observed data for calibration ------------------
 
   # create an RDS file for each MO model for calibration
   tar_target(p1_obs_rds,
-             subset_model_obs_data(data = p1_obs_feather,
+             subset_model_obs_data(data = p1_obs_mo_lakes,
                                    site_id = p1_nldas_site_ids,
                                    path_out = '1_prep/out/field_data_all'),
              pattern = map(p1_nldas_site_ids),
@@ -70,12 +77,6 @@ p1 <- list(
   #' These targets subdivide obs data into groups based on distances from each
   #' dam. The pair process is imperfect because `p1_merged_temp_data_daily_feather`
   #' does not contain spatial information.
-
-  # filter observed data to mo lakes
-  tar_target(p1_obs_mo_lakes,
-             read_feather(p1_obs_feather) %>%
-               filter(site_id %in% p1_nldas_site_ids)
-             ),
 
   # list manual cooperator crosswalk files
   tar_files(p1_obs_manual_xwalks_csv,
@@ -91,26 +92,28 @@ p1 <- list(
              pattern = p1_obs_manual_xwalks_csv),
 
   # list all cooperator data crosswalks
-  tar_files(p1_obs_coop_xwalks_rds,
+  tar_target(p1_obs_coop_xwalks_rds,
             c(p1_obs_coop_missing_xwalks_rds,
               list.files('1_prep/in/obs_review/spatial',
                          full.names = TRUE)) %>%
               .[str_detect(., 'rds')] %>%
               .[!str_detect(., 'wqp')] %>%
               .[!str_detect(., 'dam')] %>%
-              unique()
+              unique(),
+            format = 'file'
   ),
 
   # list all cooperator data files from `7a_temp_coop_munge/tmp` in `lake-temperature-model-prep`
-  tar_files(p1_obs_coop_tmp_data_rds,
-            list.files('1_prep/in/obs_review/temp', full.names = TRUE)
+  tar_target(p1_obs_coop_tmp_data,
+            list.files('1_prep/in/obs_review/temp', full.names = TRUE),
+            format = 'file'
   ),
 
   # brittle - hacky work around to make sure the temp data is
   # correctly paired with each xwalk - based on manual inspection
   tar_target(p1_obs_coop_files,
              tibble(
-               temp_files = p1_obs_coop_tmp_data_rds,
+               temp_files = p1_obs_coop_tmp_data,
                xwalk_files = p1_obs_coop_xwalks_rds[c(1, 2, 4, 3, 6, 5)]
                )
              ),
