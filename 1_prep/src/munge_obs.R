@@ -20,9 +20,6 @@ subset_model_obs_data <- function(data, site_id, path_out = '1_prep/out/field_da
 
   out_fl_name <- sprintf('%s/field_data_%s.rds', path_out, site_id_filter)
 
-  # check for path_out directory and create if not found
-  if(!dir.exists(path_out)){dir.create(path_out)}
-
   if('character' %in% class(data)) {
     data <- arrow::read_feather(data)
   }
