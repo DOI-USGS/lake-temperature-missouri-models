@@ -44,14 +44,14 @@ p1 <- list(
 
   # Prep observed data for calibration ------------------
 
-  # Pull in observed data from `lake-temperature-model-prep`
-  tar_target(p1_merged_temp_data_daily_feather,
-             '1_prep/in/merged_temp_data_daily.feather',
-             format = 'file'),
+  # # Pull in observed data from `lake-temperature-model-prep`
+  # tar_target(p1_merged_temp_data_daily_feather,
+  #            '1_prep/in/merged_temp_data_daily.feather',
+  #            format = 'file'),
 
   # create an RDS file for each MO model for calibration
   tar_target(p1_obs_rds,
-             subset_model_obs_data(data = p1_merged_temp_data_daily_feather,
+             subset_model_obs_data(data = p1_obs_feather,
                                    site_id = p1_nldas_site_ids,
                                    path_out = '1_prep/out/field_data_all'),
              pattern = map(p1_nldas_site_ids),
@@ -65,7 +65,7 @@ p1 <- list(
 
   # filter observed data to mo lakes
   tar_target(p1_obs_mo_lakes,
-             read_feather(p1_merged_temp_data_daily_feather) %>%
+             read_feather(p1_obs_feather) %>%
                filter(site_id %in% p1_nldas_site_ids)
              ),
 
