@@ -61,5 +61,9 @@ build_nldas_model_config <- function(nml_list,
     select(-basename_meteo_fl) %>%
     rowwise()
 
+  # add a filter for selecting model runs
+  model_config$filter_col <- str_extract(model_config$obs_fl,
+                                     '(?<=field_data_)(.*)(?=\\/)')
+
   return(model_config)
 }

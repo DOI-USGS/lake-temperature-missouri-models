@@ -12,7 +12,8 @@ run_glm_cal <- function(nml_obj,
                         sim_dir,
                         cal_parscale = c('cd' = 0.0001, 'sw_factor' = 0.02, 'Kw' = 0.01),
                         model_config,
-                        calibrate = FALSE){
+                        calibrate = FALSE
+                        ){
 
   # pull parameters from model_config to set up GLM3 file and sim directory
   site_id <- model_config$site_id
@@ -48,9 +49,7 @@ run_glm_cal <- function(nml_obj,
   # get starting values for params that will be modified
   cal_starts <- sapply(cal_params, FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
 
-  # # build obs data file path
-  # tmp_cal <- file.path('1_prep/out', cal_data_fl)
-
+  # check for calibration
   if(calibrate) {
 
     # define parscale for each cal param
