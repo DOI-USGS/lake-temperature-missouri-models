@@ -2,6 +2,7 @@ library(targets)
 library(tarchetypes)
 library(clustermq)
 options(clustermq.scheduler = "multiprocess")
+# run this with tar_make_clustermq(workers = n) where n == # of cores
 
 suppressPackageStartupMessages(library(tidyverse))
 tar_option_set(packages = c('tidyverse',
@@ -12,8 +13,6 @@ tar_option_set(packages = c('tidyverse',
                             'ggplot2',
                             'glmtools',
                             'sf'))
-
-# tar_option_set(debug = "p2_nldas_glm_default_runs")
 
 source('1_prep.R')
 source('2_run.R')

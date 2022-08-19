@@ -157,6 +157,7 @@ p1 <- list(
     p1_obs_buffer_from_dam_rds,
     subset_model_obs_data(data = p1_obs_buff_sf,
                           site_id = p1_nldas_site_ids,
+                          remove_dups = TRUE,
                           path_out = '1_prep/out'),
     format = 'file',
     pattern = cross(p1_obs_buff_sf, p1_nldas_site_ids)
