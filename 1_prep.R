@@ -169,8 +169,7 @@ p1 <- list(
              build_nldas_model_config(nml_list = p1_nldas_nml_list_subset,
                                       nldas_csvs = p1_nldas_csvs,
                                       nldas_time_period = p1_nldas_time_period,
-                                      obs_rds = p1_obs_rds,
-                                      obs_subset_rds = p1_obs_buffer_from_dam_rds
+                                      obs_rds = c(p1_obs_rds, p1_obs_buffer_from_dam_rds)
                                       )
   ),
 
