@@ -1,7 +1,7 @@
 library(targets)
 library(tarchetypes)
-# library(clustermq)
-# options(clustermq.scheduler = "multiprocess")
+library(clustermq)
+options(clustermq.scheduler = "multiprocess")
 # run this with tar_make_clustermq(workers = n) where n == # of cores
 
 suppressPackageStartupMessages(library(tidyverse))
@@ -26,5 +26,5 @@ source('3_calibrate.R')
 # Return the complete list of targets
 
 
-c(p1, p2)#, p3) #, p4, p5)
+c(p1, p2, p3) #, p4, p5)
 
