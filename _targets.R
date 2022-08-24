@@ -1,7 +1,7 @@
 library(targets)
 library(tarchetypes)
-library(clustermq)
-options(clustermq.scheduler = "multiprocess")
+# library(clustermq)
+# options(clustermq.scheduler = "multiprocess")
 # run this with tar_make_clustermq(workers = n) where n == # of cores
 
 suppressPackageStartupMessages(library(tidyverse))
