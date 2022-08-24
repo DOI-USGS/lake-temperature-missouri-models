@@ -22,10 +22,15 @@ subset_model_obs_data <- function(data, site_id, remove_dups = FALSE, path_out =
     data <- arrow::read_feather(data)
   }
 
+  # remove geomtry column if it exists
+  if('geometry' %in% names(data)) {
+    data <- data %>% select(- geometry)
+  }
+
   out <- data %>%
-    data.frame() %>% # using this to remove `sf` geometry
+    data.frame() %>%
     dplyr::filter(site_id %in% site_id_filter) %>%
-    select(DateTime = date, Depth = depth, temp = temp)
+    dplyr::select(DateTime = date, Depth = depth, temp = temp)
 
   if(remove_dups){
     out <- out %>%
@@ -36,6 +41,7 @@ subset_model_obs_data <- function(data, site_id, remove_dups = FALSE, path_out =
 
   out %>%
     dplyr::filter(site_id %in% site_id_filter) %>%
+    mutate(DateTime = as.Date(DateTime)) %>%  # ensure DateTime is a date
     data.frame() %>% # ensuring a proper save for use the glmtools
     saveRDS(out_fl_name)
 

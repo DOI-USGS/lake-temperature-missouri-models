@@ -14,6 +14,8 @@ tar_option_set(packages = c('tidyverse',
                             'glmtools',
                             'sf'))
 
+# tar_option_set(workspace_on_error = TRUE, packages = "tidyverse")
+
 source('1_prep.R')
 source('2_run.R')
 source('3_calibrate.R')
@@ -24,5 +26,5 @@ source('3_calibrate.R')
 # Return the complete list of targets
 
 
-c(p1, p2, p3) #, p4, p5)
+c(p1, p2)#, p3) #, p4, p5)
 
