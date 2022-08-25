@@ -78,34 +78,42 @@ create_missing_xwalk <- function(file_in, path_out) { #, transform = NULL) {
 #' @param tbl_row tibble with two rows: one specifying the full file name for the `tmp` data and one for the crosswalk
 #' @param data data.frame, observed data (`merged_temp_data_daily.feather`) from `lake-temperature-model-prep`
 #'
-repair_coop_data <- function(tbl_row, data) {
+repair_coop_data <- function(tbls, data) {
 
-  # read in data from tibble
-  dat_temp <- readRDS(tbl_row$temp_files)
-  dat_spatial <- readRDS(tbl_row$xwalk_files)
 
-  # name repair for various joins
-  dat_temp <- validate_names(dat_temp, type = 'temp')
-  dat_spatial <- validate_names(dat_spatial, type = 'spatial')
+  # this will operate rowwise on the data.frame. Using "..." as inputs to
+  # avoid variable names, but could specify the column names as inputs and access
+  # the file names that way
+  repaired <- purrr::pmap_dfr(tbls, function(...){
 
-  raw_data_joined <- dplyr::right_join(dat_spatial, # dplyr::*_join requires a tbl as the second argument
-                                       dat_temp, by = 'site') %>%
-    dplyr::mutate(
-      depth = round(depth, 2),
-      temp = round(temp, 2)
-    ) %>%
-    filter(!st_is_empty(.)) # remove any values where geometry is empty
+    tbl_row <- tibble(...)
+    # read in data from tibble
+    dat_temp <- readRDS(tbl_row$temp_files)
+    dat_spatial <- readRDS(tbl_row$xwalk_files)
 
-  # filter for the data source of interest to minimize
-  # accidental matches
-  data_filt <- data %>%
-    filter(source == sprintf('7a_temp_coop_munge/tmp/%s',
-                             basename(tbl_row$temp_files)))
+    # name repair for various joins
+    dat_temp <- validate_names(dat_temp, type = 'temp')
+    dat_spatial <- validate_names(dat_spatial, type = 'spatial')
 
-  # purposely using strict matching here
-  repaired <- left_join(data_filt, raw_data_joined,
-                        by = c('date', 'depth', 'temp')) %>%
-    select(site_id, date, depth, temp, source, geometry)
+    raw_data_joined <- dplyr::right_join(dat_spatial, # dplyr::*_join requires a tbl as the second argument
+                                         dat_temp, by = 'site') %>%
+      dplyr::mutate(
+        depth = round(depth, 2),
+        temp = round(temp, 2)
+      ) %>%
+      filter(!st_is_empty(.)) # remove any values where geometry is empty
+
+    # filter for the data source of interest to minimize
+    # accidental matches
+    data_filt <- data %>%
+      filter(source == sprintf('7a_temp_coop_munge/tmp/%s',
+                               basename(tbl_row$temp_files)))
+
+    # purposely using strict matching here
+    right_join(raw_data_joined, data_filt,
+               by = c('date', 'depth', 'temp')) %>%
+      select(site_id, date, depth, temp, source, geometry)
+  }) %>% bind_rows()
 
   return(repaired)
 }

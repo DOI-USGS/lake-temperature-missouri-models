@@ -124,11 +124,9 @@ p1 <- list(
                               xwalk = '1_prep/in/obs_review/spatial/wqp_lake_temperature_sites_sf.rds')
              ),
 
-  # add spatial information back into the observed data for coop sites
   tar_target(p1_obs_coop_repaired,
-             repair_coop_data(tbl_row = p1_obs_coop_files,
-                               data = p1_obs_mo_lakes),
-             pattern = p1_obs_coop_files),
+             repair_coop_data(tbls = p1_obs_coop_files,
+                              data = p1_obs_mo_lakes)),
 
   # combine both data sets
   tar_target(
