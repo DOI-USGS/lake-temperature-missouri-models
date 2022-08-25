@@ -10,11 +10,14 @@ subset_model_obs_data <- function(data, site_id, remove_dups = FALSE, path_out =
   # renaming this variable to avoid confusion later
   site_id_filter <- site_id
 
+  # add buffer dist tag if the data is a subset
   if('buffer_dist' %in% names(data)) {
     buffer_dist <- data$buffer_dist[1]/1000
     path_out <- paste0(path_out, '/field_data_', buffer_dist, '_km_clip')
   }
 
+  # check for out directory and create if DNE
+  if(!dir.exists(path_out)) dir.create(path_out)
 
   out_fl_name <- sprintf('%s/field_data_%s.rds', path_out, site_id_filter)
 
