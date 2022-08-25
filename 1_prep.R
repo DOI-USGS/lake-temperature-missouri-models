@@ -104,18 +104,27 @@ p1 <- list(
   ),
 
   # list all cooperator data files from `7a_temp_coop_munge/tmp` in `lake-temperature-model-prep`
-  tar_target(p1_obs_coop_tmp_data,
-            list.files('1_prep/in/obs_review/temp', full.names = TRUE),
+  tar_target(p1_obs_coop_tmp_rds,
+            c(
+              '1_prep/in/obs_review/temp/Bull_Shoals_and_LOZ_profile_data_LMVP.rds',
+              '1_prep/in/obs_review/temp/Bull_Shoals_Lake_DO_and_Temp.rds',
+              '1_prep/in/obs_review/temp/Temp_DO_BSL_MM_DD_YYYY.rds',
+              '1_prep/in/obs_review/temp/Missouri_USACE_2009_2021.rds',
+              '1_prep/in/obs_review/temp/Waterbody_Temperatures_by_State.rds',
+              '1_prep/in/obs_review/temp/UniversityofMissouri_LimnoProfiles_2017_2020.rds'
+              ),
             format = 'file'
   ),
 
-  # brittle - hacky work around to make sure the temp data is
-  # correctly paired with each xwalk - based on manual inspection
   tar_target(p1_obs_coop_files,
              tibble(
-               temp_files = p1_obs_coop_tmp_data,
-               xwalk_files = p1_obs_coop_xwalks_rds[c(1, 2, 4, 3, 6, 5)]
-               )
+               temp_files = p1_obs_coop_tmp_rds,
+               xwalk_files = p1_obs_coop_xwalks_rds
+               ) %>%
+               mutate(
+                 temp_file_hash = tools::md5sum(temp_files),
+                 xwalk_file_hash = tools::md5sum(xwalk_files)
+                 )
              ),
 
   # add spatial information back into the observed data for WQP sites
