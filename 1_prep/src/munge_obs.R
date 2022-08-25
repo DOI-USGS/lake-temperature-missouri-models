@@ -35,7 +35,7 @@ subset_model_obs_data <- function(data, site_id, remove_dups = FALSE, path_out =
   if(remove_dups){
     out <- out %>%
       group_by(DateTime, Depth) %>%
-      distinct() %>%
+      summarize(temp = mean(temp)) %>% # average duplicate instances of date and depth
       data.frame()
   }
 
