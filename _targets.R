@@ -2,6 +2,7 @@ library(targets)
 library(tarchetypes)
 library(clustermq)
 options(clustermq.scheduler = "multiprocess")
+# run this with tar_make_clustermq(workers = n) where n == # of cores
 
 suppressPackageStartupMessages(library(tidyverse))
 tar_option_set(packages = c('tidyverse',
@@ -13,11 +14,11 @@ tar_option_set(packages = c('tidyverse',
                             'glmtools',
                             'sf'))
 
-# tar_option_set(debug = "p2_nldas_glm_default_runs")
+# tar_option_set(workspace_on_error = TRUE, packages = "tidyverse")
 
 source('1_prep.R')
-# source('2_run.R')
-# source('3_calibrate.R')
+source('2_run.R')
+source('3_calibrate.R')
 # source('3_extract.R')
 # source('4_visualize.R')
 # source('5_evaluate.R')
@@ -25,5 +26,5 @@ source('1_prep.R')
 # Return the complete list of targets
 
 
-c(p1)#, p3, p4, p5)
+c(p1, p2, p3) #, p4, p5)
 

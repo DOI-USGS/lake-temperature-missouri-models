@@ -12,7 +12,8 @@ run_glm_cal <- function(nml_obj,
                         sim_dir,
                         cal_parscale = c('cd' = 0.0001, 'sw_factor' = 0.02, 'Kw' = 0.01),
                         model_config,
-                        calibrate = FALSE){
+                        calibrate = FALSE
+                        ){
 
   # pull parameters from model_config to set up GLM3 file and sim directory
   site_id <- model_config$site_id
@@ -21,17 +22,23 @@ run_glm_cal <- function(nml_obj,
   raw_meteo_fl <- model_config$meteo_fl
   raw_obs_fl <- model_config$obs_fl
 
+  model_group <- model_config$filter_col
+
   # Define simulation start and stop dates based on burn-in and burn-out periods
   sim_start <- as.character(model_config$burn_in_start)
   sim_stop <- as.character(model_config$burn_out_end)
 
   # prepare to write inputs and results locally for quick I/O
+  if(calibrate){ sim_dir <- file.path(sim_dir, model_group)}
   sim_lake_dir <- file.path(sim_dir, sprintf('%s_%s_%s', site_id, driver, time_period))
   dir.create(sim_lake_dir, recursive = TRUE, showWarnings = FALSE)
 
   # copy meteo data to sim_lake_dir
   sim_meteo_filename <- basename(raw_meteo_fl)
   file.copy(from = raw_meteo_fl, to = sim_lake_dir)
+
+  # subset nml object from list based on config file
+  nml_obj <- nml_obj[[site_id]]
 
   # set parameters
   # write nml file, specifying meteo file and start and stop dates:
@@ -48,9 +55,7 @@ run_glm_cal <- function(nml_obj,
   # get starting values for params that will be modified
   cal_starts <- sapply(cal_params, FUN = function(x) glmtools::get_nml_value(nml_obj, arg_name = x))
 
-  # # build obs data file path
-  # tmp_cal <- file.path('1_prep/out', cal_data_fl)
-
+  # check for calibration
   if(calibrate) {
 
     # define parscale for each cal param

@@ -41,7 +41,7 @@ build_nldas_model_config <- function(nml_list,
   # prep site obs configuration info
   site_obs_xwalk <- tibble(
     site_id = sapply(obs_rds,
-                     function(x){str_match(x, '(?:[^_]*\\_){5}([^.]*)')[2]},
+                     function(x){str_extract(x, 'nhdhr.*[^.rds]')},
                      simplify = TRUE),
     obs_fl = obs_rds,
     obs_fl_hash =  sapply(obs_rds, tools::md5sum)
@@ -60,6 +60,10 @@ build_nldas_model_config <- function(nml_list,
     left_join(site_obs_xwalk, by = 'site_id') %>%
     select(-basename_meteo_fl) %>%
     rowwise()
+
+  # add a filter for selecting model runs
+  model_config$filter_col <- str_extract(model_config$obs_fl,
+                                     '(?<=field_data_)(.*)(?=\\/)')
 
   return(model_config)
 }

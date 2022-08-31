@@ -104,18 +104,27 @@ p1 <- list(
   ),
 
   # list all cooperator data files from `7a_temp_coop_munge/tmp` in `lake-temperature-model-prep`
-  tar_target(p1_obs_coop_tmp_data,
-            list.files('1_prep/in/obs_review/temp', full.names = TRUE),
+  tar_target(p1_obs_coop_tmp_rds,
+            c(
+              '1_prep/in/obs_review/temp/Bull_Shoals_and_LOZ_profile_data_LMVP.rds',
+              '1_prep/in/obs_review/temp/Bull_Shoals_Lake_DO_and_Temp.rds',
+              '1_prep/in/obs_review/temp/Temp_DO_BSL_MM_DD_YYYY.rds',
+              '1_prep/in/obs_review/temp/Missouri_USACE_2009_2021.rds',
+              '1_prep/in/obs_review/temp/Waterbody_Temperatures_by_State.rds',
+              '1_prep/in/obs_review/temp/UniversityofMissouri_LimnoProfiles_2017_2020.rds'
+              ),
             format = 'file'
   ),
 
-  # brittle - hacky work around to make sure the temp data is
-  # correctly paired with each xwalk - based on manual inspection
   tar_target(p1_obs_coop_files,
              tibble(
-               temp_files = p1_obs_coop_tmp_data,
-               xwalk_files = p1_obs_coop_xwalks_rds[c(1, 2, 4, 3, 6, 5)]
-               )
+               temp_files = p1_obs_coop_tmp_rds,
+               xwalk_files = p1_obs_coop_xwalks_rds
+               ) %>%
+               mutate(
+                 temp_file_hash = tools::md5sum(temp_files),
+                 xwalk_file_hash = tools::md5sum(xwalk_files)
+                 )
              ),
 
   # add spatial information back into the observed data for WQP sites
@@ -124,11 +133,9 @@ p1 <- list(
                               xwalk = '1_prep/in/obs_review/spatial/wqp_lake_temperature_sites_sf.rds')
              ),
 
-  # add spatial information back into the observed data for coop sites
   tar_target(p1_obs_coop_repaired,
-             repair_coop_data(tbl_row = p1_obs_coop_files,
-                               data = p1_obs_mo_lakes),
-             pattern = p1_obs_coop_files),
+             repair_coop_data(tbls = p1_obs_coop_files,
+                              data = p1_obs_mo_lakes)),
 
   # combine both data sets
   tar_target(
@@ -157,6 +164,7 @@ p1 <- list(
     p1_obs_buffer_from_dam_rds,
     subset_model_obs_data(data = p1_obs_buff_sf,
                           site_id = p1_nldas_site_ids,
+                          remove_dups = TRUE,
                           path_out = '1_prep/out'),
     format = 'file',
     pattern = cross(p1_obs_buff_sf, p1_nldas_site_ids)
@@ -169,7 +177,7 @@ p1 <- list(
              build_nldas_model_config(nml_list = p1_nldas_nml_list_subset,
                                       nldas_csvs = p1_nldas_csvs,
                                       nldas_time_period = p1_nldas_time_period,
-                                      obs_rds = p1_obs_rds
+                                      obs_rds = c(p1_obs_rds, p1_obs_buffer_from_dam_rds)
                                       )
   ),
 
