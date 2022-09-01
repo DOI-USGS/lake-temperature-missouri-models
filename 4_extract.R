@@ -5,12 +5,12 @@ p4 <- list(
     p4_extract_uncal_models_feather,
     extra_glm_output(p2_nldas_glm_uncal_tibble),
     format = 'file'
-  ),
-
-  tar_target(
-    p4_extract_cal_models_feather,
-    extra_glm_output(p3_nldas_glm_cal_tibble),
-    format = 'file'
-  )
+  )#,
+#
+#   tar_target(
+#     p4_extract_cal_models_feather,
+#     extra_glm_output(p3_nldas_glm_cal_tibble),
+#     format = 'file'
+#   )
 
 )
