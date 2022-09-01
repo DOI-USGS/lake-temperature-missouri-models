@@ -5,7 +5,7 @@ p3 <- list(
   ##### NLDAS calibration runs #####
   # Function will generate file
   tar_target(
-    p3_nldas_glm_calibration_runs,
+    p3_nldas_glm_calibration_runs_nml,
     {
       run_glm_cal(
         nml_obj = p1_nldas_nml_objects,
@@ -21,8 +21,8 @@ p3 <- list(
   tar_target(
     p3_nldas_glm_cal_tibble,
     tibble(
-      model_file = p3_nldas_glm_calibration_runs,
-      model_file_hash = tools::md5sum(p3_nldas_glm_calibration_runs),
+      model_file = p3_nldas_glm_calibration_runs_nml,
+      model_file_hash = tools::md5sum(p3_nldas_glm_calibration_runs_nml),
       run_type = 'calibrated',
       time_period = p1_nldas_time_period,
       model_group = NULL
