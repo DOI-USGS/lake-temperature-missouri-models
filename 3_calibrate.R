@@ -14,7 +14,19 @@ p3 <- list(
         model_config = p1_nldas_model_config,
         calibrate = TRUE)
     },
-    pattern = map(p1_nldas_model_config)
+    pattern = map(p1_nldas_model_config),
+    format = 'file'
+    ),
+
+  tar_target(
+    p3_nldas_glm_cal_tibble,
+    tibble(
+      model_file = p3_nldas_glm_calibration_runs,
+      model_file_hash = tools::md5sum(p3_nldas_glm_calibration_runs),
+      run_type = 'calibrated',
+      time_period = p1_nldas_time_period,
+      model_group = NULL
     )
+  )
 
 )
