@@ -1,38 +1,49 @@
 #' Extract model data from GLM model runs
 #'
-#' @param model_config
-#' @param calibration_group
+#' @param model_run_tbl df, a dataframe of model configuration values
+#' @param calibration_group chr, Are you extracting results from a `calibrated` or `uncalibrated` model?
+#' @param run_group chr, See `unique(p1_nldas_model_config$filter_col)` for potential values
+#
 
+extra_glm_output <- function(glm_model_tibble) {
 
-extra_model_data <- function(model_config, calibration_group = 'all'
-                             , run_type = c('calibrated', 'uncalibrated')) {
+  # munge dates
+  model_years <- strsplit(glm_model_tibble$time_period,'_')[[1]]
+  glm_model_tibble <- glm_model_tibble %>%
+    mutate(
+      driver_start_date = as.Date(sprintf('%s-01-01', model_years[1])), # set based on user-defined modeling period
+      driver_end_date = as.Date(sprintf('%s-12-31', model_years[2])) # set based on user-defined modeling period
+    )
 
-  # adding some checks
-  if(!run_type %in% c('calibrated', 'uncalibrated'))
-    stop("`run_type` must be 'calibrated' or 'uncalibrated'")
-  if(!calibration_group %in% unique(model_config$filter_col))
-    stop(paste("Invalid `calibration_group` selected. Valid options include: ",
-                unique(model_config$filter_col), collapse = ', '))
+  # check for first part of out
+  dir_out <- file.path('4_extract/out', glm_model_tibble$run_type[1])
+  if(!dir.exists(dir_out)) dir.create(dir_out)
 
-  models_to_export <- model_config %>% filter(filter_col == calibration_group)
-
-  purrr::pmap_dfr(models_to_export, function(...) {
+  purrr::pmap_dfr(glm_model_tibble, function(...) {
 
     current_run <- tibble(...)
 
-    base_file_name <- sprintf('%s/%s_%s_%s', current_run$filter_col,
-                              current_run$site_id, current_run$driver,
-                              current_run$time_period)
+    # read in nml and associated variables for nc file
+    nml_obj <- read_nml(current_run$model_file)
 
-    # set in/out file paths
-    nml_filepath <- file.path('3_calibrate/out', base_file_name, 'glm3.nml')
-    out_filepath <- file.path('4_extract/out', model_type, base_file_name, 'glm3.nml')
-
-    # read in nml and associated varables for nc file
-    nml_obj <- read_nml(nml_file_path)
-    out_dir <- glmtools::get_nml_value(nml_obj, arg_name = 'out_dir')
+    sim_dir <- str_extract(current_run$model_file, '.*(?=\\/)')
     out_fn <- paste0(glmtools::get_nml_value(nml_obj, 'out_fn'), '.nc')
-    nc_filepath <- file.path(sim_dir, out_dir, out_fn)
+    nc_filepath <- file.path(sim_dir, out_fn)
+
+    # check for calibration-specific subfolder
+    # create if it does not exist
+    if(current_run$run_type == 'calibrated') {
+      model_subfolder <- str_extract(current_run$model_file,
+                                    '(?<=out\\/).*(?=\\/nhdhr)')
+      dir_out <- file.path(dir_out, model_subfolder)
+      if(!dir.exists(dir_out)) dir.create(dir_out)
+    }
+
+    model_feather <- str_extract(current_run$model_file, '(nhdhr).*(?=\\/output)') %>%
+      paste0(., '.feather')
+
+    # define outfile
+    outfile <- file.path(dir_out, model_feather)
 
     # extract data and munge together
     lake_depth <- glmtools::get_nml_value(nml_obj, arg_name = 'lake_depth')
