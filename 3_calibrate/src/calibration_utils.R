@@ -30,6 +30,10 @@ run_glm_cal <- function(nml_obj,
 
   # prepare to write inputs and results locally for quick I/O
   if(calibrate){ sim_dir <- file.path(sim_dir, model_group)}
+
+  # check that sim dir exists
+  if(!dir.exists(sim_dir)) dir.create(sim_dir)
+
   sim_lake_dir <- file.path(sim_dir, sprintf('%s_%s_%s', site_id, driver, time_period))
   dir.create(sim_lake_dir, recursive = TRUE, showWarnings = FALSE)
 

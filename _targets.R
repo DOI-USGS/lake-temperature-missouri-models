@@ -19,8 +19,8 @@ tar_option_set(packages = c('arrow',
 
 source('1_prep.R')
 source('2_run.R')
-source('3_calibrate.R') # skipping the calibration step in this phase
-source('4_extract.R')
+# source('3_calibrate.R') # skipping the calibration step in this phase
+# source('4_extract.R')
 
-c(p1, p2, p3, p4)
+c(p1, p2)#, p3, p4)
 
