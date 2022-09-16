@@ -19,7 +19,7 @@ extra_glm_output <- function(glm_model_tibble) {
   dir_out <- file.path('4_extract/out', glm_model_tibble$run_type[1])
   if(!dir.exists(dir_out)) dir.create(dir_out)
 
-  purrr::pmap_dfr(glm_model_tibble, function(...) {
+  out_paths <- purrr::pmap(glm_model_tibble, function(...) {
 
     current_run <- tibble(...)
 
@@ -34,7 +34,7 @@ extra_glm_output <- function(glm_model_tibble) {
     # create if it does not exist
     if(current_run$run_type == 'calibrated') {
       model_subfolder <- str_extract(current_run$model_file,
-                                    '(?<=out\\/).*(?=\\/nhdhr)')
+                                     '(?<=out\\/).*(?=\\/nhdhr)')
       dir_out <- file.path(dir_out, model_subfolder)
       if(!dir.exists(dir_out)) dir.create(dir_out)
     }
@@ -64,6 +64,9 @@ extra_glm_output <- function(glm_model_tibble) {
       filter(time >= current_run$driver_start_date &
                time <= current_run$driver_end_date) %>%
       arrow::write_feather(outfile)
-  })
+
+    return(outfile)
+  }) %>%
+    unlist()
 
 }
