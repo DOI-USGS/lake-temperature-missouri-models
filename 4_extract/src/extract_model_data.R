@@ -4,7 +4,8 @@
 #' @param dir_out chr, file directory for extracted files. Model specific subfolders will be created programmatically.
 #'
 
-extract_glm_output <- function(glm_model_tibble, dir_out = '4_extract/out') {
+extract_glm_output <- function(glm_model_tibble,
+                               out_template = '4_extract/out/%s/%s.feather') {
 
   # munge dates
   model_years <- strsplit(glm_model_tibble$time_period,'_')[[1]]
@@ -14,9 +15,9 @@ extract_glm_output <- function(glm_model_tibble, dir_out = '4_extract/out') {
       driver_end_date = as.Date(sprintf('%s-12-31', model_years[2])) # set based on user-defined modeling period
     )
 
-  # check for first part of out
-  path_out <- file.path(dir_out, glm_model_tibble$run_type[1])
-  if(!dir.exists(path_out)) dir.create(path_out)
+  # # check for first part of out
+  # path_out <- file.path(dir_out, glm_model_tibble$run_type[1])
+  # if(!dir.exists(path_out)) dir.create(path_out)
 
   out_paths <- purrr::pmap(glm_model_tibble, function(...) {
 
@@ -28,6 +29,23 @@ extract_glm_output <- function(glm_model_tibble, dir_out = '4_extract/out') {
     sim_dir <- str_extract(current_run$model_file, '.*(?=\\/)')
     out_fn <- paste0(glmtools::get_nml_value(nml_obj, 'out_fn'), '.nc')
     nc_filepath <- file.path(sim_dir, out_fn)
+
+    # create path out and check for run subfolder
+    if(current_run$run_type == 'uncalibrated') {
+      file_out <- sprintf(out_template,
+                          current_run$run_type,
+                          str_extract(current_run$model_file,
+                                      '(nhdhr).*(?=\\/output)'))
+    } else {
+      file_out <- sprintf(out_template,
+                          current_run$run_type,
+                          str_extract(current_run$model_file, '(?<=out\\/).*(?=\\/nhdhr)'),
+                          str_extract(current_run$model_file, '(nhdhr).*(?=\\/output)'))
+    }
+
+    path_out <- str_extract(file_out, '.+?(?=nhdhr)')
+    if(!dir.exists(path_out)) dir.create(path_out)
+
 
     # check for calibration-specific subfolder
     # create if it does not exist
