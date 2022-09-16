@@ -1,9 +1,10 @@
 #' Extract model data from GLM model runs
 #'
 #' @param glm_model_tibble tibble, a tibble of model run configuration values
+#' @param dir_out chr, file directory for extracted files. Model specific subfolders will be created programmatically.
 #'
 
-extract_glm_output <- function(glm_model_tibble) {
+extract_glm_output <- function(glm_model_tibble, dir_out = '4_extract/out') {
 
   # munge dates
   model_years <- strsplit(glm_model_tibble$time_period,'_')[[1]]
@@ -14,8 +15,8 @@ extract_glm_output <- function(glm_model_tibble) {
     )
 
   # check for first part of out
-  dir_out <- file.path('4_extract/out', glm_model_tibble$run_type[1])
-  if(!dir.exists(dir_out)) dir.create(dir_out)
+  path_out <- file.path(dir_out, glm_model_tibble$run_type[1])
+  if(!dir.exists(path_out)) dir.create(path_out)
 
   out_paths <- purrr::pmap(glm_model_tibble, function(...) {
 
@@ -33,15 +34,15 @@ extract_glm_output <- function(glm_model_tibble) {
     if(current_run$run_type == 'calibrated') {
       model_subfolder <- str_extract(current_run$model_file,
                                      '(?<=out\\/).*(?=\\/nhdhr)')
-      dir_out <- file.path(dir_out, model_subfolder)
-      if(!dir.exists(dir_out)) dir.create(dir_out)
+      path_out <- file.path(path_out, model_subfolder)
+      if(!dir.exists(path_out)) dir.create(path_out)
     }
 
     model_feather <- str_extract(current_run$model_file, '(nhdhr).*(?=\\/output)') %>%
       paste0(., '.feather')
 
     # define outfile
-    outfile <- file.path(dir_out, model_feather)
+    outfile <- file.path(path_out, model_feather)
 
     # extract data and munge together
     lake_depth <- glmtools::get_nml_value(nml_obj, arg_name = 'lake_depth')
