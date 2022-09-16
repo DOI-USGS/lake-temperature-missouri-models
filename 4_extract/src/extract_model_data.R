@@ -1,9 +1,7 @@
 #' Extract model data from GLM model runs
 #'
-#' @param model_run_tbl df, a dataframe of model configuration values
-#' @param calibration_group chr, Are you extracting results from a `calibrated` or `uncalibrated` model?
-#' @param run_group chr, See `unique(p1_nldas_model_config$filter_col)` for potential values
-#
+#' @param glm_model_tibble tibble, a tibble of model run configuration values
+#'
 
 extract_glm_output <- function(glm_model_tibble) {
 
