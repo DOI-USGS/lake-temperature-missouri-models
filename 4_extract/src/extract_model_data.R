@@ -44,7 +44,7 @@ extract_glm_output <- function(glm_model_tibble,
     }
 
     path_out <- str_extract(file_out, '.+?(?=nhdhr)')
-    if(!dir.exists(path_out)) dir.create(path_out)
+    if(!dir.exists(path_out)) dir.create(path_out, recursive = TRUE)
 
 
     # check for calibration-specific subfolder
