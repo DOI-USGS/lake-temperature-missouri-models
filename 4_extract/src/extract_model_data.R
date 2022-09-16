@@ -5,7 +5,7 @@
 #' @param run_group chr, See `unique(p1_nldas_model_config$filter_col)` for potential values
 #
 
-extra_glm_output <- function(glm_model_tibble) {
+extract_glm_output <- function(glm_model_tibble) {
 
   # munge dates
   model_years <- strsplit(glm_model_tibble$time_period,'_')[[1]]
