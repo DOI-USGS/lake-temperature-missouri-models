@@ -15,10 +15,6 @@ extract_glm_output <- function(glm_model_tibble,
       driver_end_date = as.Date(sprintf('%s-12-31', model_years[2])) # set based on user-defined modeling period
     )
 
-  # # check for first part of out
-  # path_out <- file.path(dir_out, glm_model_tibble$run_type[1])
-  # if(!dir.exists(path_out)) dir.create(path_out)
-
   out_paths <- purrr::pmap(glm_model_tibble, function(...) {
 
     current_run <- tibble(...)

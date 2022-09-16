@@ -39,7 +39,7 @@ run_glm_cal <- function(nml_obj,
 
   # copy meteo data to sim_lake_dir
   sim_meteo_filename <- basename(raw_meteo_fl)
-  file.copy(from = raw_meteo_fl, to = sim_lake_dir)
+  file.copy(from = raw_meteo_fl, to = sim_lake_dir, overwrite = TRUE)
 
   # subset nml object from list based on config file
   nml_obj <- nml_obj[[site_id]]
