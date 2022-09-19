@@ -8,7 +8,7 @@ p2 <- list(
   ),
 
   tar_target(
-    p2_nldas_glm_default_runs,
+    p2_nldas_glm_default_runs_nml,
     {
       run_glm_cal(
         nml_obj = p1_nldas_nml_objects,
@@ -17,6 +17,18 @@ p2 <- list(
         model_config = p2_nldas_model_config_filt,
         calibrate = FALSE)
     },
-    pattern = map(p2_nldas_model_config_filt)
+    pattern = map(p2_nldas_model_config_filt),
+    format = 'file'
+    ),
+
+  tar_target(
+    p2_nldas_glm_uncal_tibble,
+    tibble(
+      model_file = p2_nldas_glm_default_runs_nml,
+      model_file_hash = tools::md5sum(p2_nldas_glm_default_runs_nml),
+      run_type = 'uncalibrated',
+      time_period = p1_nldas_time_period,
+      model_group = NULL
     )
+  )
 )

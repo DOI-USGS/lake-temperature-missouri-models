@@ -60,7 +60,7 @@ run_glm3_model <- function(sim_dir, nml_obj, model_config, export_fl_template) {
 
   # copy meteo data to sim_lake_dir
   sim_meteo_filename <- basename(raw_meteo_fl)
-  file.copy(from = raw_meteo_fl, to = sim_lake_dir)
+  file.copy(from = raw_meteo_fl, to = sim_lake_dir, overwrite = T)
 
   # Define simulation start and stop dates based on burn-in and burn-out periods
   sim_start <- as.character(model_config$burn_in_start)
