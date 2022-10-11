@@ -39,18 +39,8 @@ extract_glm_output <- function(glm_model_tibble,
                           str_extract(current_run$model_file, '(nhdhr).*(?=\\/output)'))
     }
 
-    path_out <- str_extract(file_out, '.+?(?=nhdhr)')
+    path_out <- str_extract(file_out, '.+?(?=/nhdhr)')
     if(!dir.exists(path_out)) dir.create(path_out, recursive = TRUE)
-
-
-    # check for calibration-specific subfolder
-    # create if it does not exist
-    if(current_run$run_type == 'calibrated') {
-      model_subfolder <- str_extract(current_run$model_file,
-                                     '(?<=out\\/).*(?=\\/nhdhr)')
-      path_out <- file.path(path_out, model_subfolder)
-      if(!dir.exists(path_out)) dir.create(path_out)
-    }
 
     model_feather <- str_extract(current_run$model_file, '(nhdhr).*(?=\\/output)') %>%
       paste0(., '.feather')

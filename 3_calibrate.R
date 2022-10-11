@@ -20,13 +20,28 @@ p3 <- list(
 
   tar_target(
     p3_nldas_glm_cal_tibble,
-    tibble(
-      model_file = p3_nldas_glm_calibration_runs_nml,
-      model_file_hash = tools::md5sum(p3_nldas_glm_calibration_runs_nml),
-      run_type = 'calibrated',
-      time_period = p1_nldas_time_period,
-      model_group = NULL
-    )
+    {
+      tibble(
+        model_file = p3_nldas_glm_calibration_runs_nml,
+        model_file_hash = tools::md5sum(p3_nldas_glm_calibration_runs_nml),
+        run_type = 'calibrated',
+        time_period = p1_nldas_time_period
+      ) %>%
+        mutate(
+          filter_col = str_extract(model_file,
+                              '(?<=.out/)(.*)(?=/nhdhr)'),
+          site_id = str_extract(model_file,
+                                '(nhdhr.*)(?=_NLDAS)')
+        ) %>%
+        # add `p1_lake_to_univ_mo_xwalk_df`  to capture lake name
+        left_join(., p1_lake_to_univ_mo_xwalk_df) %>%
+        # add `p1_nldas_model_config`  to capture observed data src and hash
+        left_join(p1_nldas_model_config)  %>%
+        select(site_id, `Lake Name`, run_type, filter_col, time_period,
+               model_file, model_file_hash,
+               obs_fl, obs_fl_hash)
+    }
+
   )
 
 )
