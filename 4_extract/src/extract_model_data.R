@@ -14,10 +14,8 @@ extract_glm_output <- function(glm_model_tibble,
       driver_start_date = as.Date(sprintf('%s-01-01', model_years[1])), # set based on user-defined modeling period
       driver_end_date = as.Date(sprintf('%s-12-31', model_years[2])) # set based on user-defined modeling period
     )
-  # browser()
 
   out_paths <- purrr::pmap(glm_model_tibble, function(...) {
-    # browser()
 
     current_run <- tibble(...)
 
