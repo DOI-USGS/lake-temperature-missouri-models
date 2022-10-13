@@ -39,7 +39,7 @@ p3 <- list(
         # add `p1_nldas_model_config`  to capture observed data src and hash
         left_join(p1_nldas_model_config)  %>%
         select(site_id, `Lake Name`, run_type, filter_col, time_period,
-               model_file, model_file_hash,
+               model_type, model_file, model_file_hash,
                obs_fl, obs_fl_hash)
     }
 
