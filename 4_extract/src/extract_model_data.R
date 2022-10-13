@@ -14,8 +14,10 @@ extract_glm_output <- function(glm_model_tibble,
       driver_start_date = as.Date(sprintf('%s-01-01', model_years[1])), # set based on user-defined modeling period
       driver_end_date = as.Date(sprintf('%s-12-31', model_years[2])) # set based on user-defined modeling period
     )
+  # browser()
 
   out_paths <- purrr::pmap(glm_model_tibble, function(...) {
+    # browser()
 
     current_run <- tibble(...)
 
@@ -26,27 +28,25 @@ extract_glm_output <- function(glm_model_tibble,
     out_fn <- paste0(glmtools::get_nml_value(nml_obj, 'out_fn'), '.nc')
     nc_filepath <- file.path(sim_dir, out_fn)
 
-    # create path out and check for run subfolder
+    # create feather file name
+    expression <- sprintf('(nhdhr).*(?=_%s)', current_run$time_period)
+    model_feather <- str_extract(current_run$model_file, expression) %>%
+      paste0(current_run$model_type, '_', current_run$run_type, '_', .)
+
+    # create file out, path out, and check for run subfolder
     if(current_run$run_type == 'uncalibrated') {
       file_out <- sprintf(out_template,
-                          current_run$run_type,
-                          str_extract(current_run$model_file,
-                                      '(nhdhr).*(?=\\/output)'))
+                          current_run$run_type, model_feather)
     } else {
       file_out <- sprintf(out_template,
                           current_run$run_type,
-                          str_extract(current_run$model_file, '(?<=out\\/).*(?=\\/nhdhr)'),
-                          str_extract(current_run$model_file, '(nhdhr).*(?=\\/output)'))
+                          current_run$filter_col,
+                          model_feather)
     }
 
-    path_out <- str_extract(file_out, '.+?(?=/nhdhr)')
+    expression <- sprintf('.+?(?=/%s)', current_run$model_type)
+    path_out <- str_extract(file_out, expression)
     if(!dir.exists(path_out)) dir.create(path_out, recursive = TRUE)
-
-    model_feather <- str_extract(current_run$model_file, '(nhdhr).*(?=\\/output)') %>%
-      paste0(., '.feather')
-
-    # define outfile
-    outfile <- file.path(path_out, model_feather)
 
     # extract data and munge together
     lake_depth <- glmtools::get_nml_value(nml_obj, arg_name = 'lake_depth')
@@ -66,9 +66,9 @@ extract_glm_output <- function(glm_model_tibble,
       # remove burn-in and burn-out time period
       filter(time >= current_run$driver_start_date &
                time <= current_run$driver_end_date) %>%
-      arrow::write_feather(outfile)
+      arrow::write_feather(file_out)
 
-    return(outfile)
+    return(file_out)
   }) %>%
     unlist()
 
