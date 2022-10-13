@@ -22,6 +22,7 @@ p3 <- list(
     p3_nldas_glm_cal_tibble,
     {
       tibble(
+        model_type = 'GLM',
         model_file = p3_nldas_glm_calibration_runs_nml,
         model_file_hash = tools::md5sum(p3_nldas_glm_calibration_runs_nml),
         run_type = 'calibrated',
