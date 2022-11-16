@@ -24,6 +24,7 @@ p2 <- list(
   tar_target(
     p2_nldas_glm_uncal_tibble,
     tibble(
+      model_type = 'GLM',
       model_file = p2_nldas_glm_default_runs_nml,
       model_file_hash = tools::md5sum(p2_nldas_glm_default_runs_nml),
       run_type = 'uncalibrated',
